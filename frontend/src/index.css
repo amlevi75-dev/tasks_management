@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+/* ── Dark theme (default) ── */
+:root {
+  --bg-base:      #0b0f1a;
+  --bg-surface:   #111827;
+  --bg-elevated:  #1a2236;
+  --bg-hover:     #1e2d45;
+  --border:       #1e293b;
+  --border-soft:  #263348;
+
+  --text-primary:   #e2e8f0;
+  --text-secondary: #94a3b8;
+  /* was #475569 — 2.5:1 against bg-base, fails WCAG AA (4.5:1).
+     #8896ab measures 6.4:1 while staying visibly dimmer than
+     text-secondary, so the three-tier hierarchy is preserved. */
+  --text-muted:     #8896ab;
+
+  --accent:      #0F766E;
+  --accent-soft: #042f2e;
+  --accent-glow: rgba(15,118,110,0.18);
+
+  --green:  #10b981;
+  --yellow: #f59e0b;
+  --red:    #ef4444;
+  --purple: #8b5cf6;
+
+  --radius:    8px;
+  --radius-lg: 12px;
+  --shadow:    0 4px 24px rgba(0,0,0,0.4);
+}
+
+/* ── Light theme ── */
+[data-theme="light"] {
+  --bg-base:      #f1f5f9;
+  --bg-surface:   #ffffff;
+  --bg-elevated:  #f8fafc;
+  --bg-hover:     #e2e8f0;
+  --border:       #e2e8f0;
+  --border-soft:  #cbd5e1;
+
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+
+  --accent:      #0d9488;
+  --accent-soft: #ccfbf1;
+  --accent-glow: rgba(13,148,136,0.12);
+
+  --green:  #059669;
+  --yellow: #d97706;
+  --red:    #dc2626;
+  --purple: #7c3aed;
+
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { direction: ltr; }
+
+/* Headings must follow the theme. Without this they fall back to the
+   user-agent default (black), which is invisible in dark mode. Covers every
+   h1-h6 in the app rather than relying on per-element inline colours. */
+h1, h2, h3, h4, h5, h6 { color: var(--text-primary); }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Safety net: color is inherited by default, so this should be redundant —
+   but the project-name bug turned out to be a spot that visually read as
+   using the body's default despite the div itself carrying no explicit
+   color. Forcing it on the generic text-carrying elements removes any
+   ambiguity rather than relying on inheritance holding everywhere. */
+div, span, p, td, th, label, button {
+  color: inherit;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 3px; }
+
+button { cursor: pointer; font-family: inherit; }
+input, textarea, select { font-family: inherit; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius);
+  font-size: 14px; font-weight: 500;
+  border: none; transition: all 0.15s ease;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); }
+.btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-soft); }
+.btn-ghost:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { filter: brightness(1.1); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+.input {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  padding: 9px 12px; font-size: 14px; width: 100%;
+  transition: border-color 0.15s; outline: none;
+}
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.input::placeholder { color: var(--text-muted); }
+
+/* Native date/time pickers render a dark calendar icon by default — nearly
+   invisible on a dark background. color-scheme tells the browser to draw
+   its built-in controls (including the calendar icon) using light colours;
+   the WebKit filter is a fallback for engines that ignore color-scheme on
+   this specific icon. */
+input[type="date"], input[type="datetime-local"], input[type="time"] {
+  color-scheme: dark;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.5);
+  cursor: pointer;
+  border-radius: 3px;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(1) brightness(1.5) drop-shadow(0 0 2px var(--accent));
+}
+
+.select {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  padding: 8px 12px; font-size: 13px; outline: none; cursor: pointer;
+}
+.select:focus { border-color: var(--accent); }
+
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.modal {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  width: 90%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto;
+  animation: slideUp 0.2s ease;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+}
+.modal-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+@keyframes slideUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Rich text description editor */
+.richtext-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.richtext-editor ol { margin: 0 0 0 20px; padding: 0; }
+.richtext-editor ul { margin: 0 0 0 20px; padding: 0; }
+.richtext-editor:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }

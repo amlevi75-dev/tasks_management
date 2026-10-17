@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E" />
+      <stop offset="100%" stop-color="#042F2E" />
+    </linearGradient>
+  </defs>
+  
+  <!-- App Icon Base -->
+  <rect x="0" y="0" width="100" height="100" rx="22" fill="url(#bgGradient)" />
+  
+  <!-- Inner Mark Scaled and Centered -->
+  <g transform="translate(15, 15) scale(0.7)">
+    <circle cx="50" cy="50" r="42" fill="none" stroke="#F8FAFC" stroke-width="6"/>
+    <path d="M 30 25 L 70 25 L 50 50 L 70 75 L 30 75 Z" fill="none" stroke="#F8FAFC" stroke-width="6" stroke-linejoin="round"/>
+    <line x1="30" y1="25" x2="30" y2="75" stroke="#F8FAFC" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="50" cy="50" r="8" fill="#F59E0B" />
+  </g>
+</svg>

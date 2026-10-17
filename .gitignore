@@ -1,0 +1,12 @@
+config.docker.yaml
+backend/config.yaml
+.env
+backend/static/
+frontend/node_modules/
+frontend/dist/
+__pycache__/
+*.pyc
+.venv/
+backend/attachments/
+*.log
+*.zip

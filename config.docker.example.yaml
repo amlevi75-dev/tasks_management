@@ -1,0 +1,85 @@
+# Kairos — configuration for the Docker container.
+#
+# Mounted read-only as /app/config.yaml (see docker-compose.yml). Do NOT put this
+# file inside backend/: .dockerignore keeps secrets out of the image.
+#
+# Easiest way to use it: copy your current backend/config.yaml here and change
+# ONLY the lines marked "DOCKER:" below. Every other setting is identical to the
+# non-Docker install.
+
+branding:
+  app_name:      "Kairos"
+  # Exactly what users type in the browser. It builds the SSO redirect URI, the
+  # session-cookie "secure" flag and the links inside e-mails. Docker does not
+  # change it as long as you keep publishing port 8000 on the same host name.
+  app_url:       "http://your-server:8000"
+  logo_letter:   "K"
+  primary_color: "#0F766E"
+  logo_svg:      "/kairos-icon.svg"
+
+ad:
+  enabled:   false
+  server:    "ldap://your-dc.company.local"
+  domain:    "company.local"
+  base_dn:   "DC=company,DC=local"
+  bind_user: "svc_kairos@company.local"
+  bind_pass: ""
+
+email:
+  smtp_host:             "mail.company.local"
+  smtp_port:             25
+  smtp_user:             ""
+  smtp_pass:             ""
+  from_address:          "kairos@company.local"
+
+sso:
+  enabled:        false
+  discovery_url:  "https://adfs.company.local/adfs/.well-known/openid-configuration"
+  client_id:      "PASTE-THE-CLIENT-ID-FROM-ADFS"
+  client_secret:  ""
+  scope:          "openid profile email"
+  resource:       ""
+  username_claim: "upn"
+  # If ADFS uses an internal CA, keep this true and give the container the CA
+  # (SSL_CERT_FILE in docker-compose.yml). Do not switch it off to get around it.
+  verify_ssl:     true
+  verify_audience: true
+  allow_local_login: true
+  lookup_ad_display_name: true
+  button_label:   "Sign in with company account"
+
+db:
+  # DOCKER: "localhost" would now mean the container itself, not your server.
+  # Use ONE of:
+  #   - the real address of the Postgres server, e.g. "10.77.77.1"
+  #   - "host.docker.internal" if Postgres runs on this same machine
+  # Either way Postgres must accept the connection: listen_addresses must cover
+  # that address, and pg_hba.conf needs a line for the container's source
+  # network (for the default Docker bridge: 172.16.0.0/12).
+  host:     "localhost"
+  port:     5432
+  name:     "kairos"
+  user:     "kairos"
+  password: ""
+  sslmode:  "prefer"
+  pool_min: 2
+  pool_max: 10
+
+app:
+  secret_key:   ""
+  # DOCKER: absolute path on the kairos_data volume. The old relative value
+  # ("attachments") would land inside the container and be lost on recreate.
+  upload_dir:   "/data/attachments"
+  cors_origins:
+    - "http://localhost:8000"
+    - "http://your-server:8000"
+
+nodered:
+  enabled:         false
+  url:             "http://YOUR_NODE_RED_IP:1880/api/tasks"
+  timeout_seconds: 5
+  auth_token:      ""
+
+api_key:
+  key:      ""
+  username: "svc_nodered"

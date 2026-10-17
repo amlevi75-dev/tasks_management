@@ -1,0 +1,20 @@
+cat > .gitignore <<'EOF'
+# Secrets — never commit
+config.yaml
+
+# Database & data
+*.db
+*.sqlite
+uploads/
+logs/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Frontend deps
+frontend-src/node_modules/
+node_modules/
+EOF

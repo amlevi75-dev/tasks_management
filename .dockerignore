@@ -1,0 +1,33 @@
+# Files kept OUT of the build context. Paths are relative to the project folder
+# that contains backend/ and frontend/.
+
+# ── Secrets and per-server config: mounted at run time, never baked in ────────
+config.docker.yaml
+backend/config.yaml
+.env
+**/.env
+
+# ── Build output / installed dependencies: the image build recreates these ────
+# backend/static is the OLD built frontend from deploy.sh. If it were copied it
+# could ship a stale bundle, so it is excluded and stage 1 provides a fresh one.
+backend/static
+frontend/dist
+**/node_modules
+**/__pycache__
+**/*.pyc
+**/.venv
+**/venv
+
+# ── Local data ────────────────────────────────────────────────────────────────
+backend/attachments
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+**/*.log
+
+# ── Version control, editors, packaging leftovers ─────────────────────────────
+.git
+.gitignore
+.vscode
+.idea
+**/*.zip

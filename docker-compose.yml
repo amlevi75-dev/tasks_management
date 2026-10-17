@@ -1,0 +1,63 @@
+# Kairos — Linux container deployment.
+#
+#   docker compose up -d --build     build the image here and start it
+#   docker compose up -d             start from an image you loaded with "docker load"
+#   docker compose logs -f kairos    follow the log (goes to stderr, as before)
+#   docker compose down              stop and remove the container (data volume stays)
+#
+# First start only — create the first admin user (a new database has none):
+#   docker compose exec kairos python create_admin.py
+
+name: kairos
+
+services:
+  kairos:
+    # Tag every release (kairos:1.0.1, kairos:1.0.2 ...) and put the tag here.
+    # Rolling back is then just: set the previous tag, "docker compose up -d".
+    image: kairos:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kairos
+    restart: unless-stopped
+
+    ports:
+      # host:container. Keep 8000 on the host so app_url, the ADFS redirect URI
+      # and the Node-RED calls to http://<server>:8000 all keep working unchanged.
+      - "8000:8000"
+
+    volumes:
+      # Your settings, read-only. The app looks for /app/config.yaml next to
+      # config.py. The file MUST exist before "up": if it is missing Docker
+      # creates an empty *directory* with that name and the app fails to start.
+      - ./config.docker.yaml:/app/config.yaml:ro
+      # Task attachments (config: app.upload_dir = /data/attachments).
+      - kairos_data:/data
+
+    # Lets config.yaml say  db.host: "host.docker.internal"  when Postgres runs on
+    # the same machine as Docker. Harmless if you use a real address instead.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    # ── Optional: only if you need them ───────────────────────────────────────
+    # Internal CA for ADFS (sso.verify_ssl: true). Put the CA certificate chain in
+    # ./certs/company-ca.pem, then uncomment BOTH the volume and the variable:
+    #   volumes:
+    #     - ./certs/company-ca.pem:/certs/company-ca.pem:ro
+    #   environment:
+    #     SSL_CERT_FILE: /certs/company-ca.pem
+    #
+    # If AD / ADFS host names do not resolve from inside the container, point it at
+    # your internal DNS server:
+    #   dns:
+    #     - 10.77.77.2
+
+    # Without this, Docker's default log driver never rotates and can fill the disk.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  kairos_data:
