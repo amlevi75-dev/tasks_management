@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { apiFetch } from "../App";
 import TaskCard from "../components/TaskCard";
 import TaskModal from "../components/TaskModal";
+import { tr, trVal } from "../i18n";
 
 export default function MyTasks({ navigate }) {
   const [tasks, setTasks] = useState([]);
@@ -19,9 +20,9 @@ export default function MyTasks({ navigate }) {
   return (
     <div style={{ padding: 28, maxWidth: 900, margin: "0 auto" }}>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700 }}>My Tasks</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 700 }}>{tr("My Tasks")}</h1>
         <p style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 4 }}>
-          {tasks.length} active task{tasks.length !== 1 ? "s" : ""} assigned to you
+          {tr(tasks.length === 1 ? "1 active task assigned to you" : "{n} active tasks assigned to you", { n: tasks.length })}
         </p>
       </div>
 
@@ -37,7 +38,7 @@ export default function MyTasks({ navigate }) {
       {tasks.length === 0 && (
         <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-muted)", fontSize: 14 }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
-          No tasks assigned to you
+          {tr("No tasks assigned to you")}
         </div>
       )}
 

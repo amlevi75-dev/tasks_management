@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useAuth, apiFetch, useBranding, fmtDateTime } from "../App";
+import { useAuth, apiFetch, useBranding, fmtDateTime, useLang } from "../App";
+import { tr, trVal, getLang } from "../i18n";
 
 function getStoredTheme() {
   try { return localStorage.getItem("tm_theme") || "dark"; } catch { return "dark"; }
@@ -12,6 +13,7 @@ function applyTheme(theme) {
 export default function Layout({ children, navigate, currentPage, currentParams }) {
   const { user, setUser } = useAuth();
   const branding          = useBranding();
+  const { lang, changeLang } = useLang();
 
   const [projects, setProjects]           = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -61,12 +63,12 @@ export default function Layout({ children, navigate, currentPage, currentParams 
   const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
 
   return (
-    <div dir="ltr" style={{ display:"flex", height:"100vh", overflow:"hidden" }}>
+    <div style={{ display:"flex", height:"100vh", overflow:"hidden" }}>
 
       {/* ── Sidebar ── */}
       <aside style={{
         width: sidebarOpen ? 240 : 0, flexShrink:0,
-        background:"var(--bg-surface)", borderRight:"1px solid var(--border)",
+        background:"var(--bg-surface)", borderInlineEnd:"1px solid var(--border)",
         display:"flex", flexDirection:"column", overflow:"hidden",
         transition:"width 0.2s ease",
       }}>
@@ -97,21 +99,21 @@ export default function Layout({ children, navigate, currentPage, currentParams 
 
         {/* Nav */}
         <nav style={{ flex:1, padding:"10px", overflowY:"auto" }}>
-          <NavItem label="Dashboard" icon="⊞"
+          <NavItem label={tr("Dashboard")} icon="⊞"
             active={currentPage==="dashboard"}
             onClick={()=>navigate({name:"dashboard",params:{}})} />
-          <NavItem label="My Tasks" icon="✓"
+          <NavItem label={tr("My Tasks")} icon="✓"
             active={currentPage==="mytasks"}
             onClick={()=>navigate({name:"mytasks",params:{}})} />
 
           {isAdmin && <>
-            <SectionLabel>Administration</SectionLabel>
-            <NavItem label="System Users" icon="👥"
+            <SectionLabel>{tr("Administration")}</SectionLabel>
+            <NavItem label={tr("System Users")} icon="👥"
               active={currentPage==="admin-users"}
               onClick={()=>navigate({name:"admin-users",params:{}})} />
           </>}
 
-          <SectionLabel>Projects</SectionLabel>
+          <SectionLabel>{tr("Projects")}</SectionLabel>
           {projects.filter(p => !p.archived).map(p => {
             const pid             = p.id;
             const isActiveProject = currentPage==="project"          && Number(currentParams?.projectId)===pid;
@@ -125,10 +127,10 @@ export default function Layout({ children, navigate, currentPage, currentParams 
                   onClick={()=>navigate({name:"project",params:{projectId:pid}})} />
                 {isExpanded && (
                   <>
-                    {p.role !== "light_member" && <NavItem label="Members" icon="👤" indent
+                    {p.role !== "light_member" && <NavItem label={tr("Members")} icon="👤" indent
                       active={isMembersPage}
                       onClick={()=>navigate({name:"project-users",params:{projectId:pid}})} />}
-                    <NavItem label="Analytics" icon="📊" indent
+                    <NavItem label={tr("Analytics")} icon="📊" indent
                       active={isAnalyticsPage}
                       onClick={()=>navigate({name:"project-analytics",params:{projectId:pid}})} />
                   </>
@@ -137,14 +139,14 @@ export default function Layout({ children, navigate, currentPage, currentParams 
             );
           })}
           {projects.length===0 && (
-            <div style={{ fontSize:12, color:"var(--text-muted)", padding:"8px 10px" }}>No projects yet</div>
+            <div style={{ fontSize:12, color:"var(--text-muted)", padding:"8px 10px" }}>{tr("No projects yet")}</div>
           )}
         </nav>
 
         {/* Footer */}
         <div style={{ padding:"10px", borderTop:"1px solid var(--border)", flexShrink:0, display:"flex", flexDirection:"column", gap:2 }}>
-          <FooterBtn icon={isDark?"☀️":"🌙"} label={isDark?"Light mode":"Dark mode"} onClick={toggleTheme} />
-          <FooterBtn icon="→" label="Sign Out" onClick={logout} />
+          <FooterBtn icon={isDark?"☀️":"🌙"} label={isDark?tr("Light mode"):tr("Dark mode")} onClick={toggleTheme} />
+          <FooterBtn icon={getLang()==="he" ? "←" : "→"} label={tr("Sign Out")} onClick={logout} />
         </div>
       </aside>
 
@@ -159,6 +161,12 @@ export default function Layout({ children, navigate, currentPage, currentParams 
           <button className="btn btn-ghost btn-sm" onClick={()=>setSidebarOpen(o=>!o)}>≡</button>
           <div style={{ flex:1 }} />
 
+          {/* Language switch: English <-> Hebrew */}
+          <button className="btn btn-ghost btn-sm" onClick={() => changeLang(lang === "he" ? "en" : "he")}
+            title={lang === "he" ? "Switch to English" : "החלף לעברית"} style={{ fontWeight:600 }}>
+            🌐 {lang === "he" ? "English" : "עברית"}
+          </button>
+
           {/* Notification bell */}
           <div style={{ position:"relative" }}>
             <button className="btn btn-ghost btn-sm" style={{ position:"relative" }}
@@ -166,7 +174,7 @@ export default function Layout({ children, navigate, currentPage, currentParams 
               🔔
               {unread>0 && (
                 <span style={{
-                  position:"absolute", top:1, right:1,
+                  position:"absolute", top:1, insetInlineEnd:1,
                   width:16, height:16, borderRadius:"50%",
                   background:"var(--red)", color:"#fff",
                   fontSize:9, fontWeight:700,
@@ -186,7 +194,7 @@ export default function Layout({ children, navigate, currentPage, currentParams 
 
           {isAdmin && (
             <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:99, background:"rgba(245,158,11,0.15)", color:"#f59e0b", letterSpacing:"0.5px" }}>
-              ADMIN
+              {tr("ADMIN")}
             </span>
           )}
           <div style={{ fontSize:13, color:"var(--text-secondary)", padding:"4px 10px", background:"var(--bg-elevated)", borderRadius:6 }}>
@@ -216,12 +224,12 @@ function NavItem({ label, icon, dot, active, onClick, indent }) {
   return (
     <button onClick={onClick} style={{
       display:"flex", alignItems:"center", gap:8,
-      width:"100%", padding: indent?"6px 10px 6px 26px":"7px 10px",
+      width:"100%", padding: indent?"6px 10px":"7px 10px", paddingInlineStart: indent?26:10,
       borderRadius:6, border:"none",
       background: active?"var(--accent-soft)":"transparent",
       color: active?"var(--accent)": indent?"var(--text-muted)":"var(--text-secondary)",
       fontSize: indent?12:13, fontWeight: active?600:400,
-      cursor:"pointer", textAlign:"left", transition:"background 0.1s, color 0.1s",
+      cursor:"pointer", textAlign:"start", transition:"background 0.1s, color 0.1s",
     }}
       onMouseEnter={e=>{ if(!active){e.currentTarget.style.background="var(--bg-elevated)"; e.currentTarget.style.color="var(--text-primary)";} }}
       onMouseLeave={e=>{ if(!active){e.currentTarget.style.background="transparent"; e.currentTarget.style.color=indent?"var(--text-muted)":"var(--text-secondary)";} }}
@@ -241,7 +249,7 @@ function FooterBtn({ icon, label, onClick }) {
       display:"flex", alignItems:"center", gap:8,
       width:"100%", padding:"7px 10px", border:"none", borderRadius:6,
       background:"transparent", color:"var(--text-secondary)",
-      fontSize:13, cursor:"pointer", textAlign:"left",
+      fontSize:13, cursor:"pointer", textAlign:"start",
     }}
       onMouseEnter={e=>{e.currentTarget.style.background="var(--bg-elevated)"; e.currentTarget.style.color="var(--text-primary)";}}
       onMouseLeave={e=>{e.currentTarget.style.background="transparent"; e.currentTarget.style.color="var(--text-secondary)";}}
@@ -265,7 +273,7 @@ function NotifPanel({ notifications, onOpen, onMarkAllRead, onClose }) {
 
   return (
     <div ref={panelRef} style={{
-      position:"absolute", top:"calc(100% + 8px)", right:0,
+      position:"absolute", top:"calc(100% + 8px)", insetInlineEnd:0,
       width:340, maxHeight:440, overflowY:"auto",
       background:"var(--bg-elevated)", border:"1px solid var(--border-soft)",
       borderRadius:"var(--radius-lg)", boxShadow:"var(--shadow)", zIndex:50,
@@ -273,17 +281,17 @@ function NotifPanel({ notifications, onOpen, onMarkAllRead, onClose }) {
       {/* Header */}
       <div style={{ padding:"12px 16px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <span style={{ fontWeight:600, fontSize:13 }}>
-          Notifications {unread>0 && <span style={{ marginLeft:4, fontSize:11, background:"var(--red)", color:"#fff", borderRadius:99, padding:"1px 7px" }}>{unread}</span>}
+          {tr("Notifications")} {unread>0 && <span style={{ marginInlineStart:4, fontSize:11, background:"var(--red)", color:"#fff", borderRadius:99, padding:"1px 7px" }}>{unread}</span>}
         </span>
         {unread>0 && (
           <button onClick={onMarkAllRead} style={{ background:"none", border:"none", fontSize:11, color:"var(--accent)", cursor:"pointer", padding:0 }}>
-            Mark all read
+            {tr("Mark all read")}
           </button>
         )}
       </div>
 
       {notifications.length===0 && (
-        <div style={{ padding:"32px 0", textAlign:"center", color:"var(--text-muted)", fontSize:13 }}>All caught up! 🎉</div>
+        <div style={{ padding:"32px 0", textAlign:"center", color:"var(--text-muted)", fontSize:13 }}>{tr("All caught up! 🎉")}</div>
       )}
 
       {notifications.map(n => {
@@ -310,7 +318,7 @@ function NotifPanel({ notifications, onOpen, onMarkAllRead, onClose }) {
               <div style={{ display:"flex", alignItems:"center", gap:6, marginTop:3 }}>
                 <span style={{ fontSize:11, color:"var(--text-muted)" }}>{fmtDateTime(n.created_at)}</span>
                 {isClickable && !n.read && (
-                  <span style={{ fontSize:10, color:"var(--accent)", fontWeight:600 }}>Click to open →</span>
+                  <span style={{ fontSize:10, color:"var(--accent)", fontWeight:600 }}>{tr("Click to open →")}</span>
                 )}
               </div>
             </div>

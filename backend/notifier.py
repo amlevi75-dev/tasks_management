@@ -7,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 import requests
 from config import settings
 from database import _ConnWrapper as DbConn
+from i18n_server import tx, norm, status_label, prio_label, direction
 
 # ── Shared email helpers ───────────────────────────────────────────────────────
 
@@ -63,34 +64,53 @@ def _email_header(accent_color: str, title: str) -> str:
       </div>
     </div>"""
 
-def _email_footer(task_url: str) -> str:
+def _email_footer(task_url: str, lang: str = "en") -> str:
     return f"""
         <div style="margin-top:20px">
           <a href="{task_url}" style="display:inline-block;padding:10px 20px;
              background:{settings.PRIMARY_COLOR};color:#fff;text-decoration:none;
-             border-radius:6px;font-weight:600;font-size:13px">Open Task →</a>
+             border-radius:6px;font-weight:600;font-size:13px">{tx(lang, 'Open Task →')}</a>
         </div>
         <p style="color:#94a3b8;font-size:12px;margin-top:16px">
-          You received this from {settings.APP_NAME}. Reply on the task to keep the conversation in one place.
+          {tx(lang, 'You received this from {app}. Reply on the task to keep the conversation in one place.', app=settings.APP_NAME)}
         </p>"""
 
-def _wrap(header: str, body: str, task_url: str) -> str:
+def _wrap(header: str, body: str, task_url: str, lang: str = "en") -> str:
     return f"""
-    <div style="font-family:Segoe UI,system-ui,sans-serif;max-width:600px;margin:auto;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0">
+    <div dir="{direction(lang)}" style="text-align:{'right' if lang == 'he' else 'left'};font-family:Segoe UI,system-ui,sans-serif;max-width:600px;margin:auto;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0">
       {header}
       <div style="padding:24px 28px;background:#ffffff;border-radius:0 0 8px 8px">
         {body}
-        {_email_footer(task_url)}
+        {_email_footer(task_url, lang)}
       </div>
     </div>"""
 
 # ── Notification functions ─────────────────────────────────────────────────────
+
+def _row(label: str, value: str, first: bool = False, bold: bool = False) -> str:
+    w = "width:100px" if first else ""
+    b = "font-weight:600" if bold else ""
+    return (f"<tr><td style='padding:6px 0;color:#64748b;font-size:13px;{w}'>{label}</td>"
+            f"<td style='padding:6px 0;font-size:13px;{b}'>{value}</td></tr>")
+
+
+def _describe_change(lang: str, change, fallback: str) -> str:
+    """Build the change text in the RECIPIENT's language from a structured change."""
+    if isinstance(change, dict):
+        if change.get("kind") == "status":
+            return tx(lang, "Status → {status}", status=status_label(lang, change.get("status")))
+        if change.get("kind") == "comment":
+            return tx(lang, "New comment by {name}: {preview}",
+                      name=change.get("by", ""), preview=change.get("preview", ""))
+    return fallback
+
 
 def notify_task_assigned(db: DbConn, task_id: int):
     row = db.execute("""
         SELECT t.title, t.status, t.priority, t.due_date, t.project_id,
                p.name  as project_name,
                u.email as assignee_email, u.display_name as assignee_name,
+               COALESCE(u.language,'en') as lang,
                r.display_name as reporter_name
         FROM tasks t
         JOIN  projects p ON p.id = t.project_id
@@ -101,41 +121,41 @@ def notify_task_assigned(db: DbConn, task_id: int):
     if not row:
         log.warning("notify_task_assigned: task %s not found", task_id)
         return
-    if not row["assignee_email"]:
+    lang = norm(row["lang"])
+
+    # In-app notification first: it does not depend on the user having an email
+    # address (before, a missing address skipped the bell entry too).
+    if row["assignee_email"]:
+        url  = task_deep_link(task_id, row["project_id"])
+        rows = (_row(tx(lang, "Task"), row["title"], True, True)
+                + _row(tx(lang, "Project"), row["project_name"])
+                + _row(tx(lang, "Priority"), prio_label(lang, row["priority"]))
+                + _row(tx(lang, "Assigned by"), row["reporter_name"] or tx(lang, "System"))
+                + (_row(tx(lang, "Due"), row["due_date"]) if row["due_date"] else ""))
+        body = (f"<h3 style=\"margin:0 0 16px;color:#0f172a\">{tx(lang, 'You have been assigned a task')}</h3>"
+                f"<table style=\"border-collapse:collapse;width:100%\">{rows}</table>")
+        html = _wrap(_email_header(settings.PRIMARY_COLOR, tx(lang, "Task Assigned to You")), body, url, lang)
+        send_email(row["assignee_email"],
+                   f"[{settings.APP_NAME}] " + tx(lang, "Task assigned: {title}", title=row["title"]), html)
+    else:
         log.warning("notify_task_assigned: task %s assignee '%s' has no email address on file",
-                    task_id, row["assignee_name"] or "%s")
-        return
-
-    url  = task_deep_link(task_id, row["project_id"])
-    body = f"""
-        <h3 style="margin:0 0 16px;color:#0f172a">You have been assigned a task</h3>
-        <table style="border-collapse:collapse;width:100%">
-          <tr><td style="padding:6px 0;color:#64748b;font-size:13px;width:100px">Task</td>
-              <td style="padding:6px 0;font-size:13px;font-weight:600">{row['title']}</td></tr>
-          <tr><td style="padding:6px 0;color:#64748b;font-size:13px">Project</td>
-              <td style="padding:6px 0;font-size:13px">{row['project_name']}</td></tr>
-          <tr><td style="padding:6px 0;color:#64748b;font-size:13px">Priority</td>
-              <td style="padding:6px 0;font-size:13px">{row['priority'].upper()}</td></tr>
-          <tr><td style="padding:6px 0;color:#64748b;font-size:13px">Assigned by</td>
-              <td style="padding:6px 0;font-size:13px">{row['reporter_name'] or 'System'}</td></tr>
-          {"<tr><td style='padding:6px 0;color:#64748b;font-size:13px'>Due</td><td style='padding:6px 0;font-size:13px'>" + row['due_date'] + "</td></tr>" if row['due_date'] else ""}
-        </table>"""
-
-    html = _wrap(_email_header(settings.PRIMARY_COLOR, "Task Assigned to You"), body, url)
-    send_email(row["assignee_email"], f"[{settings.APP_NAME}] Task assigned: {row['title']}", html)
+                    task_id, row["assignee_name"])
 
     db.execute(
-        "INSERT INTO notifications (user_id, task_id, message) SELECT assignee_id, id, %s FROM tasks WHERE id=%s",
-        (f"You were assigned: {row['title']}", task_id)
+        "INSERT INTO notifications (user_id, task_id, message) SELECT assignee_id, id, %s FROM tasks "
+        "WHERE id=%s AND assignee_id IS NOT NULL",
+        (tx(lang, "You were assigned: {title}", title=row["title"]), task_id)
     )
     db.commit()
 
-def notify_task_updated(db: DbConn, task_id: int, changed_by_name: str, changes: str):
+
+def notify_task_updated(db: DbConn, task_id: int, changed_by_name: str, changes: str, change=None):
     """
-    Notify the assignee AND every collaborator that a task changed —
-    including comments (add_comment routes through this too). Each gets both
-    an email and an in-app notification row; previously only the assignee
-    got an email and nobody got the in-app entry from this function.
+    Notify the assignee AND every collaborator that a task changed (comments
+    included). Each recipient gets an email and a bell entry in their own
+    language. `changes` is the English text (used as fallback / for 'en');
+    `change` is an optional structured description, e.g.
+    {"kind": "status", "status": "done"} or {"kind": "comment", "by": ..., "preview": ...}.
     """
     task = db.execute("""
         SELECT t.title, t.project_id, p.name as project_name, t.assignee_id
@@ -146,59 +166,57 @@ def notify_task_updated(db: DbConn, task_id: int, changed_by_name: str, changes:
         log.warning("notify_task_updated: task %s not found", task_id)
         return
 
-    recipients = []  # [(user_id, email, display_name)]
+    recipients = []  # [(user_id, email, display_name, lang)]
     if task["assignee_id"]:
-        u = db.execute("SELECT id, email, display_name FROM users WHERE id=%s", (task["assignee_id"],)).fetchone()
+        u = db.execute("SELECT id, email, display_name, COALESCE(language,'en') as lang FROM users WHERE id=%s",
+                       (task["assignee_id"],)).fetchone()
         if u:
-            recipients.append((u["id"], u["email"], u["display_name"]))
+            recipients.append((u["id"], u["email"], u["display_name"], u["lang"]))
 
     collabs = db.execute("""
-        SELECT u.id, u.email, u.display_name
+        SELECT u.id, u.email, u.display_name, COALESCE(u.language,'en') as lang
         FROM task_collaborators tc JOIN users u ON u.id = tc.user_id
         WHERE tc.task_id = %s
     """, (task_id,)).fetchall()
-    recipients += [(r["id"], r["email"], r["display_name"]) for r in collabs]
+    recipients += [(r["id"], r["email"], r["display_name"], r["lang"]) for r in collabs]
 
     if not recipients:
         log.warning("notify_task_updated: task %s has no assignee or collaborators to notify", task_id)
         return
 
     url  = task_deep_link(task_id, task["project_id"])
-    body = f"""
-        <h3 style="margin:0 0 16px;color:#0f172a">Task updated</h3>
-        <table style="border-collapse:collapse;width:100%">
-          <tr><td style="padding:6px 0;color:#64748b;font-size:13px;width:100px">Task</td>
-              <td style="padding:6px 0;font-size:13px;font-weight:600">{task['title']}</td></tr>
-          <tr><td style="padding:6px 0;color:#64748b;font-size:13px">Project</td>
-              <td style="padding:6px 0;font-size:13px">{task['project_name']}</td></tr>
-          <tr><td style="padding:6px 0;color:#64748b;font-size:13px">Updated by</td>
-              <td style="padding:6px 0;font-size:13px">{changed_by_name}</td></tr>
-          <tr><td style="padding:6px 0;color:#64748b;font-size:13px">Change</td>
-              <td style="padding:6px 0;font-size:13px">{changes}</td></tr>
-        </table>"""
-    html = _wrap(_email_header("#0f766e", "Task Updated"), body, url)
-    subject = f"[{settings.APP_NAME}] Task updated: {task['title']}"
-
     seen = set()
-    for user_id, email, display_name in recipients:
+    for user_id, email, display_name, lang in recipients:
         if user_id in seen:
             continue
         seen.add(user_id)
+        lang = norm(lang)
+        text = _describe_change(lang, change, changes)
+        rows = (_row(tx(lang, "Task"), task["title"], True, True)
+                + _row(tx(lang, "Project"), task["project_name"])
+                + _row(tx(lang, "Updated by"), changed_by_name)
+                + _row(tx(lang, "Change"), text))
+        body = (f"<h3 style=\"margin:0 0 16px;color:#0f172a\">{tx(lang, 'Task updated')}</h3>"
+                f"<table style=\"border-collapse:collapse;width:100%\">{rows}</table>")
+        html = _wrap(_email_header("#0f766e", tx(lang, "Task Updated")), body, url, lang)
+        subject = f"[{settings.APP_NAME}] " + tx(lang, "Task updated: {title}", title=task["title"])
         if email:
             send_email(email, subject, html)
         else:
             log.warning("notify_task_updated: user '%s' has no email address on file", display_name)
         db.execute(
             "INSERT INTO notifications (user_id, task_id, message) VALUES (%s,%s,%s)",
-            (user_id, task_id, f"{task['title']}: {changes}")
+            (user_id, task_id, f"{task['title']}: {text}")
         )
     db.commit()
+
 
 def notify_collaborator_added(db: DbConn, task_id: int, collaborator_user_id: int, added_by_name: str):
     row = db.execute("""
         SELECT t.title, t.priority, t.due_date, t.project_id,
                p.name  as project_name,
-               u.email as collab_email, u.display_name as collab_name
+               u.email as collab_email, u.display_name as collab_name,
+               COALESCE(u.language,'en') as lang
         FROM tasks t
         JOIN  projects p ON p.id = t.project_id
         JOIN  users u    ON u.id = %s
@@ -207,29 +225,25 @@ def notify_collaborator_added(db: DbConn, task_id: int, collaborator_user_id: in
     if not row:
         log.warning("notify_collaborator_added: task %s or user %s not found", task_id, collaborator_user_id)
         return
-    if not row["collab_email"]:
+    lang = norm(row["lang"])
+
+    if row["collab_email"]:
+        url  = task_deep_link(task_id, row["project_id"])
+        rows = (_row(tx(lang, "Task"), row["title"], True, True)
+                + _row(tx(lang, "Project"), row["project_name"])
+                + _row(tx(lang, "Added by"), added_by_name)
+                + (_row(tx(lang, "Due"), row["due_date"]) if row["due_date"] else ""))
+        body = (f"<h3 style=\"margin:0 0 16px;color:#0f172a\">{tx(lang, 'You were added as a collaborator')}</h3>"
+                f"<table style=\"border-collapse:collapse;width:100%\">{rows}</table>")
+        html = _wrap(_email_header(settings.PRIMARY_COLOR, tx(lang, "Added as Collaborator")), body, url, lang)
+        send_email(row["collab_email"],
+                   f"[{settings.APP_NAME}] " + tx(lang, "Added as collaborator: {title}", title=row["title"]), html)
+    else:
         log.warning("notify_collaborator_added: user '%s' has no email address on file", row["collab_name"])
-        return
-
-    url  = task_deep_link(task_id, row["project_id"])
-    body = f"""
-        <h3 style="margin:0 0 16px;color:#0f172a">You were added as a collaborator</h3>
-        <table style="border-collapse:collapse;width:100%">
-          <tr><td style="padding:6px 0;color:#64748b;font-size:13px;width:100px">Task</td>
-              <td style="padding:6px 0;font-size:13px;font-weight:600">{row['title']}</td></tr>
-          <tr><td style="padding:6px 0;color:#64748b;font-size:13px">Project</td>
-              <td style="padding:6px 0;font-size:13px">{row['project_name']}</td></tr>
-          <tr><td style="padding:6px 0;color:#64748b;font-size:13px">Added by</td>
-              <td style="padding:6px 0;font-size:13px">{added_by_name}</td></tr>
-          {"<tr><td style='padding:6px 0;color:#64748b;font-size:13px'>Due</td><td style='padding:6px 0;font-size:13px'>" + row['due_date'] + "</td></tr>" if row['due_date'] else ""}
-        </table>"""
-
-    html = _wrap(_email_header(settings.PRIMARY_COLOR, "Added as Collaborator"), body, url)
-    send_email(row["collab_email"], f"[{settings.APP_NAME}] Added as collaborator: {row['title']}", html)
 
     db.execute(
         "INSERT INTO notifications (user_id, task_id, message) VALUES (%s,%s,%s)",
-        (collaborator_user_id, task_id, f"You were added as a collaborator: {row['title']}")
+        (collaborator_user_id, task_id, tx(lang, "You were added as a collaborator: {title}", title=row["title"]))
     )
     db.commit()
 
@@ -237,15 +251,13 @@ def notify_collaborator_added(db: DbConn, task_id: int, collaborator_user_id: in
 def notify_mention(db: DbConn, task_id: int, mentioned_user_id: int,
                    mentioned_by_name: str, comment_body: str) -> bool:
     """
-    Email + in-app notify a @mentioned user. Deliberately unconditional on
-    assignment, role, or project membership beyond having access to the task
-    at all — anyone named with @username is notified. Returns whether the
-    email genuinely sent, so callers can report the real outcome instead of
-    just "we attempted it".
+    Email + in-app notify a @mentioned user, in their own language.
+    Returns whether the email genuinely sent. The bell entry is written even
+    when the user has no email address or the mail fails.
     """
     row = db.execute("""
         SELECT t.title, t.project_id, p.name as project_name,
-               u.email, u.display_name
+               u.email, u.display_name, COALESCE(u.language,'en') as lang
         FROM tasks t
         JOIN  projects p ON p.id = t.project_id
         JOIN  users u    ON u.id = %s
@@ -254,32 +266,34 @@ def notify_mention(db: DbConn, task_id: int, mentioned_user_id: int,
     if not row:
         log.warning("notify_mention: task %s or user %s not found", task_id, mentioned_user_id)
         return False
-    if not row["email"]:
-        log.warning("notify_mention: user '%s' has no email address on file", row["display_name"])
-        return False
+    lang = norm(row["lang"])
 
-    url     = task_deep_link(task_id, row["project_id"])
-    preview = comment_body[:300] + ("…" if len(comment_body) > 300 else "")
-    body    = f"""
-        <h3 style="margin:0 0 16px;color:#0f172a">{mentioned_by_name} mentioned you</h3>
+    sent = False
+    if row["email"]:
+        url     = task_deep_link(task_id, row["project_id"])
+        preview = comment_body[:300] + ("…" if len(comment_body) > 300 else "")
+        border  = "border-right:4px solid" if lang == "he" else "border-left:4px solid"
+        body    = f"""
+        <h3 style="margin:0 0 16px;color:#0f172a">{tx(lang, '{name} mentioned you', name=mentioned_by_name)}</h3>
         <p style="font-size:13px;color:#475569;margin-bottom:12px">
-          On task <strong>{row['title']}</strong> in <strong>{row['project_name']}</strong>:
+          {tx(lang, 'On task <strong>{title}</strong> in <strong>{project}</strong>:', title=row['title'], project=row['project_name'])}
         </p>
         <blockquote style="margin:0 0 16px;padding:12px 16px;background:#f8fafc;
-                           border-left:4px solid #7c3aed;border-radius:4px;
+                           {border} #7c3aed;border-radius:4px;
                            color:#374151;font-size:13px;font-style:italic">
           {preview}
         </blockquote>"""
+        html = _wrap(_email_header("#7c3aed", tx(lang, "You Were Mentioned")), body, url, lang)
+        sent = send_email(row["email"],
+                          f"[{settings.APP_NAME}] " + tx(lang, "{name} mentioned you in: {title}",
+                                                          name=mentioned_by_name, title=row["title"]), html)
+    else:
+        log.warning("notify_mention: user '%s' has no email address on file", row["display_name"])
 
-    html = _wrap(_email_header("#7c3aed", "You Were Mentioned"), body, url)
-    sent = send_email(row["email"], f"[{settings.APP_NAME}] {mentioned_by_name} mentioned you in: {row['title']}", html)
-
-    # In-app notification is written even if the email itself failed — the
-    # mention still happened and should show up in-product regardless of
-    # mail delivery.
     db.execute(
         "INSERT INTO notifications (user_id, task_id, message) VALUES (%s,%s,%s)",
-        (mentioned_user_id, task_id, f"{mentioned_by_name} mentioned you in: {row['title']}")
+        (mentioned_user_id, task_id,
+         tx(lang, "{name} mentioned you in: {title}", name=mentioned_by_name, title=row["title"]))
     )
     db.commit()
     return sent

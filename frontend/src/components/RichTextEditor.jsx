@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from "react";
 import { isRTL } from "../App";
+import { tr, trVal } from "../i18n";
 
 /**
  * Minimal rich-text editor for the task description field.
@@ -71,13 +72,13 @@ export default function RichTextEditor({ value, onChange, placeholder, readOnly 
   return (
     <div>
       <div style={{ display: "flex", gap: 4, marginBottom: 6 }}>
-        <button type="button" title="Bold (Ctrl+B)" onMouseDown={exec("bold")} style={btnStyle(false)}>
+        <button type="button" title={tr("Bold (Ctrl+B)")} onMouseDown={exec("bold")} style={btnStyle(false)}>
           <strong>B</strong>
         </button>
-        <button type="button" title="Italic (Ctrl+I)" onMouseDown={exec("italic")} style={btnStyle(false)}>
+        <button type="button" title={tr("Italic (Ctrl+I)")} onMouseDown={exec("italic")} style={btnStyle(false)}>
           <em>I</em>
         </button>
-        <button type="button" title="Numbered list" onMouseDown={exec("insertOrderedList")} style={btnStyle(false)}>
+        <button type="button" title={tr("Numbered list")} onMouseDown={exec("insertOrderedList")} style={btnStyle(false)}>
           1.
         </button>
       </div>

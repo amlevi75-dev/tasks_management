@@ -174,7 +174,8 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="Not authenticated")
     row = db.execute(
         """SELECT s.user_id, s.expires_at, u.username, u.display_name,
-                  u.email, COALESCE(u.is_admin, 0) as is_admin, u.auth_source
+                  u.email, COALESCE(u.is_admin, 0) as is_admin, u.auth_source,
+                  COALESCE(u.language, 'en') as language
            FROM sessions s JOIN users u ON u.id = s.user_id
            WHERE s.token = %s""",
         (session_token,)
@@ -227,7 +228,7 @@ def get_current_user_or_api_key(
             raise HTTPException(status_code=401, detail="Invalid API key")
         row = db.execute(
             "SELECT id as user_id, username, display_name, email, "
-            "COALESCE(is_admin, 0) as is_admin, auth_source "
+            "COALESCE(is_admin, 0) as is_admin, auth_source, COALESCE(language, 'en') as language "
             "FROM users WHERE username=%s AND is_active=1",
             (settings.API_KEY_USERNAME,)
         ).fetchone()

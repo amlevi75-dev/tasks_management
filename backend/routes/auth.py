@@ -36,7 +36,7 @@ def login(body: LoginRequest, response: Response, db: DbConn = Depends(get_db)):
         httponly=True, samesite="lax", max_age=SESSION_TTL_HOURS * 3600
     )
     user = db.execute(
-        "SELECT id, username, display_name, email, is_admin, auth_source FROM users WHERE id=%s",
+        "SELECT id, username, display_name, email, is_admin, auth_source, COALESCE(language, 'en') AS language FROM users WHERE id=%s",
         (user_id,)
     ).fetchone()
     return {"user": dict(user)}

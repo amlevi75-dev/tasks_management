@@ -57,7 +57,7 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { direction: ltr; }
+/* direction comes from <html dir>, set by i18n.js (ltr for English, rtl for Hebrew) */
 
 /* Headings must follow the theme. Without this they fall back to the
    user-agent default (black), which is invisible in dark mode. Covers every
@@ -186,6 +186,6 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   color: var(--text-muted);
   pointer-events: none;
 }
-.richtext-editor ol { margin: 0 0 0 20px; padding: 0; }
-.richtext-editor ul { margin: 0 0 0 20px; padding: 0; }
+.richtext-editor ol { margin: 0; margin-inline-start: 20px; padding: 0; }
+.richtext-editor ul { margin: 0; margin-inline-start: 20px; padding: 0; }
 .richtext-editor:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }

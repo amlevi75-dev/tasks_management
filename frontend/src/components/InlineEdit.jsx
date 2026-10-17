@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { tr, trVal } from "../i18n";
 
 /**
  * Inline-editable cell used by the list view.
@@ -51,7 +52,7 @@ export default function InlineEdit({
       await onSave(next);
     } catch (e) {
       setDraft(value ?? "");                   // revert
-      setError(e?.message || "Update failed");
+      setError(e?.message || tr("Update failed"));
       setTimeout(() => setError(""), 4000);
     } finally {
       setBusy(false);
@@ -63,7 +64,7 @@ export default function InlineEdit({
   // ── Read-only ──────────────────────────────────────────────────────────────
   if (readOnly) {
     return (
-      <div style={{ fontSize:12, color:"var(--text-secondary)", textAlign: rtl ? "right" : align,
+      <div style={{ fontSize:12, color:"var(--text-secondary)", textAlign: rtl ? "right" : (align==="left" ? "start" : align==="right" ? "end" : align),
                     direction: rtl ? "rtl" : "ltr",
                     overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
         {render ? render(value) : (value || placeholder)}
@@ -133,7 +134,7 @@ export default function InlineEdit({
   return (
     <div
       onClick={e => { e.stopPropagation(); setEditing(true); }}
-      title={error || title || "Click to edit"}
+      title={error || title || tr("Click to edit")}
       style={{
         fontSize:12, textAlign:align, cursor:"text",
         padding:"2px 4px", margin:"-2px -4px", borderRadius:4,

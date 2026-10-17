@@ -385,7 +385,8 @@ def add_comment(task_id: int, body: CommentCreate, user=Depends(get_current_user
     preview = body.body[:300] + ("…" if len(body.body) > 300 else "")
     notify_task_updated(
         db, task_id, user["display_name"],
-        f"New comment by {user['display_name']}: {preview}"
+        f"New comment by {user['display_name']}: {preview}",
+        change={"kind": "comment", "by": user["display_name"], "preview": preview},
     )
 
     # Mention detection is deliberately independent of assignment — anyone
@@ -742,7 +743,8 @@ def update_task(task_id: int, body: TaskUpdate, user=Depends(get_current_user), 
     if new_assignee and new_assignee != row["assignee_id"]:
         notify_task_assigned(db, task_id)
     elif updates.get("status"):
-        notify_task_updated(db, task_id, user["display_name"], f"Status → {updates['status'].replace('_',' ').title()}")
+        notify_task_updated(db, task_id, user["display_name"], f"Status → {updates['status'].replace('_',' ').title()}",
+                            change={"kind": "status", "status": updates["status"]})
     result = dict(task_row(db, task_id))
     _notify_nodered_async(result, "task.updated")
     return result

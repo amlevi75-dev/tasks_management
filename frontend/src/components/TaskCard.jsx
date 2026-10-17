@@ -1,4 +1,5 @@
 import { fmtDate } from "../App";
+import { tr, trVal } from "../i18n";
 
 const PRIO_COLORS   = { low:"#10b981", medium:"#3b82f6", high:"#f59e0b", critical:"#ef4444" };
 const STATUS_COLORS = { new:"#64748b", open:"#3b82f6", in_progress:"#f59e0b", done:"#10b981" };
@@ -17,7 +18,7 @@ export default function TaskCard({ task, onClick }) {
     <div onClick={onClick} style={{
       background:   "var(--bg-surface)",
       border:       `1px solid ${overdue ? "rgba(239,68,68,0.4)" : "var(--border)"}`,
-      borderLeft:   `3px solid ${pc}`,
+      borderInlineStart:   `3px solid ${pc}`,
       borderRadius: "var(--radius)",
       padding:      "10px 12px",
       cursor:       "pointer",
@@ -38,9 +39,9 @@ export default function TaskCard({ task, onClick }) {
       <div style={{ fontSize:13, fontWeight:500, marginBottom:6, lineHeight:1.4, color:"var(--text-primary)" }}>
         {task.title}
         {task.is_collaborator && (
-          <span style={{ marginLeft:6, fontSize:10, fontWeight:600, padding:"1px 6px",
+          <span style={{ marginInlineStart:6, fontSize:10, fontWeight:600, padding:"1px 6px",
                          borderRadius:99, background:"var(--accent-soft)", color:"var(--accent)" }}>
-            Collaborating
+            {tr("Collaborating")}
           </span>
         )}
       </div>
@@ -58,10 +59,10 @@ export default function TaskCard({ task, onClick }) {
       {/* Badges row */}
       <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
         <span style={{ fontSize:10, fontWeight:700, padding:"1px 6px", borderRadius:3, background:`${sc}20`, color:sc }}>
-          {task.status.replace("_"," ").toUpperCase()}
+          {trVal("status", task.status, task.status.replace("_"," ")).toUpperCase()}
         </span>
         <span style={{ fontSize:10, fontWeight:700, padding:"1px 6px", borderRadius:3, background:`${pc}15`, color:pc }}>
-          {task.priority.toUpperCase()}
+          {trVal("prio", task.priority).toUpperCase()}
         </span>
         {/* Subtask count */}
         {task.subtask_count > 0 && (
@@ -71,7 +72,7 @@ export default function TaskCard({ task, onClick }) {
         )}
         {/* Assignee avatar */}
         {task.assignee_name && (
-          <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:4 }}>
+          <div style={{ marginInlineStart:"auto", display:"flex", alignItems:"center", gap:4 }}>
             <div style={{
               width:20, height:20, borderRadius:"50%",
               background:`hsl(${(task.assignee_id*67)%360},50%,38%)`,
@@ -91,12 +92,12 @@ export default function TaskCard({ task, onClick }) {
         }}>
           {/* Red bell for overdue, calendar for on-track */}
           {overdue ? (
-            <span title="Overdue!" style={{ fontSize:12 }}>🔔</span>
+            <span title={tr("Overdue!")} style={{ fontSize:12 }}>🔔</span>
           ) : (
             <span>📅</span>
           )}
           {fmtDate(task.due_date)}
-          {overdue && <span style={{ marginLeft:2 }}>— Overdue</span>}
+          {overdue && <span style={{ marginInlineStart:2 }}>{tr("— Overdue")}</span>}
         </div>
       )}
     </div>

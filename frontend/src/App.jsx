@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext, Fragment } from "react";
 import LoginPage    from "./views/LoginPage";
 import Dashboard    from "./views/Dashboard";
 import ProjectView  from "./views/ProjectView";
@@ -7,12 +7,15 @@ import AdminUsers   from "./views/AdminUsers";
 import ProjectUsers   from "./views/ProjectUsers";
 import ProjectAnalytics from "./views/ProjectAnalytics";
 import Layout       from "./components/Layout";
+import { tr, trVal, getLang, setLang as setLangLocal, hasExplicitChoice } from "./i18n";
 
 export const AuthContext     = createContext(null);
 export const BrandingContext = createContext({ app_name:"Kairos", logo_letter:"K", primary_color:"#0F766E", logo_svg:"/kairos-icon.svg" });
 
 export const useAuth     = () => useContext(AuthContext);
 export const useBranding = () => useContext(BrandingContext);
+export const LangContext = createContext({ lang:"en", changeLang:()=>{} });
+export const useLang     = () => useContext(LangContext);
 
 // Use relative URL when served by FastAPI; fallback to localhost for dev
 const API = window.location.port === "5173" ? "http://localhost:8000/api" : "/api";
@@ -124,7 +127,7 @@ export function apiFetch(path, options = {}) {
   }).then(async (res) => {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Request failed");
+      throw new Error(typeof err.detail === "string" ? tr(err.detail) : tr("Request failed"));
     }
     const data = await res.json();
     // Tell the sidebar when a project was created / renamed / archived / deleted
@@ -139,9 +142,9 @@ export function apiFetch(path, options = {}) {
 }
 
 export default function App() {
-  // Force LTR regardless of OS/browser/Windows Hebrew locale
-  document.documentElement.setAttribute("dir", "ltr");
-  document.documentElement.setAttribute("lang", "en");
+  // Page direction/lang follow the chosen language (see i18n.js); it is applied
+  // when the language is set, and once at start-up when i18n.js loads.
+  const [lang, setLangState] = useState(getLang());
 
   const [user, setUser]         = useState(undefined);
   const [branding, setBranding] = useState({ app_name:"TaskMaster", logo_letter:"T", primary_color:"#3b82f6" });
@@ -151,8 +154,29 @@ export default function App() {
     // Load branding first (no auth needed)
     apiFetch("/branding").then(setBranding).catch(() => {});
     // Then check session
-    apiFetch("/auth/me").then(d => setUser(d.user)).catch(() => setUser(null));
+    apiFetch("/auth/me").then(d => { setUser(d.user); syncLang(d.user); }).catch(() => setUser(null));
   }, []);
+
+  // Choosing a language: apply it here immediately and remember it on the server
+  // (users.language) so e-mails and bell notifications arrive in that language too.
+  const changeLang = (next) => {
+    setLangLocal(next, true);
+    setLangState(getLang());
+    if (user) apiFetch("/users/me/language", { method:"PUT", body: JSON.stringify({ language: next }) }).catch(() => {});
+  };
+
+  // After login / session restore: a language picked on this device wins and is
+  // pushed to the server; otherwise the server's saved choice is used.
+  const syncLang = (u) => {
+    if (!u) return;
+    if (hasExplicitChoice()) {
+      if (u.language !== getLang())
+        apiFetch("/users/me/language", { method:"PUT", body: JSON.stringify({ language: getLang() }) }).catch(() => {});
+    } else if (u.language && u.language !== getLang()) {
+      setLangLocal(u.language, false);
+      setLangState(getLang());
+    }
+  };
 
   // Update page title from branding
   useEffect(() => {
@@ -163,7 +187,7 @@ export default function App() {
     return (
       <BrandingContext.Provider value={branding}>
         <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center", background:"#0f172a" }}>
-          <div style={{ color:"#94a3b8", fontFamily:"monospace", fontSize:14 }}>Loading {branding.app_name}…</div>
+          <div style={{ color:"#94a3b8", fontFamily:"monospace", fontSize:14 }}>{tr("Loading")} {branding.app_name}…</div>
         </div>
       </BrandingContext.Provider>
     );
@@ -172,9 +196,13 @@ export default function App() {
   if (!user) {
     return (
       <BrandingContext.Provider value={branding}>
-        <AuthContext.Provider value={{ user, setUser }}>
-          <LoginPage onLogin={(u) => { setUser(u); setPage({ name:"dashboard", params:{} }); }} />
-        </AuthContext.Provider>
+        <LangContext.Provider value={{ lang, changeLang }}>
+          <AuthContext.Provider value={{ user, setUser }}>
+            <Fragment key={lang}>
+              <LoginPage onLogin={(u) => { setUser(u); syncLang(u); setPage({ name:"dashboard", params:{} }); }} />
+            </Fragment>
+          </AuthContext.Provider>
+        </LangContext.Provider>
       </BrandingContext.Provider>
     );
   }
@@ -192,11 +220,15 @@ export default function App() {
 
   return (
     <BrandingContext.Provider value={branding}>
-      <AuthContext.Provider value={{ user, setUser }}>
-        <Layout navigate={setPage} currentPage={page.name} currentParams={page.params}>
-          {renderPage()}
-        </Layout>
-      </AuthContext.Provider>
+      <LangContext.Provider value={{ lang, changeLang }}>
+        <AuthContext.Provider value={{ user, setUser }}>
+          <Fragment key={lang}>
+            <Layout navigate={setPage} currentPage={page.name} currentParams={page.params}>
+              {renderPage()}
+            </Layout>
+          </Fragment>
+        </AuthContext.Provider>
+      </LangContext.Provider>
     </BrandingContext.Provider>
   );
 }

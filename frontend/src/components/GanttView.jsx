@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { fmtDate } from "../App";
+import { tr, trVal, getLang } from "../i18n";
 
 const STATUS_COLORS = {
   new:         "#64748b",
@@ -25,7 +26,7 @@ function addDays(d, n) { return new Date(d.getTime() + n * DAY_MS); }
 function diffDays(a, b) { return Math.round((b - a) / DAY_MS); }
 function toDate(str)    { return str ? new Date(str) : null; }
 function formatMonth(d) {
-  return d.toLocaleDateString("en-GB", { month:"short", year:"numeric" });
+  return d.toLocaleDateString(getLang()==="he" ? "he-IL" : "en-GB", { month:"short", year:"numeric" });
 }
 
 // ── Compute bar geometry for a single row ─────────────────────────────────────
@@ -133,14 +134,14 @@ export default function GanttView({ tasks, subtaskMap, dependencies = [], onEdit
     return (
       <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:12, color:"var(--text-muted)" }}>
         <div style={{ fontSize:40 }}>📅</div>
-        <div style={{ fontSize:14 }}>No tasks have due dates yet.</div>
-        <div style={{ fontSize:12 }}>Set a due date on tasks to see them on the Gantt chart.</div>
+        <div style={{ fontSize:14 }}>{tr("No tasks have due dates yet.")}</div>
+        <div style={{ fontSize:12 }}>{tr("Set a due date on tasks to see them on the Gantt chart.")}</div>
       </div>
     );
   }
 
   return (
-    <div style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+    <div dir="ltr" style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
 
         {/* ── Frozen left label column ── */}
@@ -155,7 +156,7 @@ export default function GanttView({ tasks, subtaskMap, dependencies = [], onEdit
           <div style={{ height: HDR_H, flexShrink:0, borderBottom:"1px solid var(--border)", background:"var(--bg-elevated)",
             display:"flex", alignItems:"center", padding:"0 14px",
             fontSize:11, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.5px",
-          }}>Task</div>
+          }}>{tr("Task")}</div>
 
           {/* Row labels — scroll locked to chart */}
           <div style={{ overflowY:"hidden", flex:1 }}>
@@ -234,7 +235,7 @@ export default function GanttView({ tasks, subtaskMap, dependencies = [], onEdit
                   position:"absolute", top:0, left:"50%", transform:"translateX(-50%)",
                   background:"var(--accent)", color:"#fff",
                   fontSize:9, fontWeight:700, padding:"1px 5px", borderRadius:3, whiteSpace:"nowrap",
-                }}>TODAY</div>
+                }}>{tr("TODAY")}</div>
               </div>
             )}
 
@@ -353,12 +354,12 @@ export default function GanttView({ tasks, subtaskMap, dependencies = [], onEdit
         background:"var(--bg-surface)",
         display:"flex", gap:20, alignItems:"center", fontSize:11, color:"var(--text-muted)", flexWrap:"wrap",
       }}>
-        <span style={{ fontWeight:600, color:"var(--text-secondary)" }}>Legend:</span>
+        <span style={{ fontWeight:600, color:"var(--text-secondary)" }}>{tr("Legend:")}</span>
         {[
-          { color:"#3b82f6", label:"Open" },
-          { color:"#f59e0b", label:"In Progress" },
-          { color:"#10b981", label:"Done" },
-          { color:"#ef4444", label:"Overdue" },
+          { color:"#3b82f6", label:tr("Open") },
+          { color:"#f59e0b", label:tr("In Progress") },
+          { color:"#10b981", label:tr("Done") },
+          { color:"#ef4444", label:tr("Overdue") },
         ].map(l => (
           <div key={l.label} style={{ display:"flex", alignItems:"center", gap:5 }}>
             <div style={{ width:14, height:8, borderRadius:2, background:l.color, opacity:0.85 }} />
@@ -367,25 +368,25 @@ export default function GanttView({ tasks, subtaskMap, dependencies = [], onEdit
         ))}
         <div style={{ display:"flex", alignItems:"center", gap:5 }}>
           <div style={{ width:10, height:10, background:"#64748b", transform:"rotate(45deg)" }} />
-          <span>Due date</span>
+          <span>{tr("Due date")}</span>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:5 }}>
           <svg width="30" height="12" style={{ overflow:"visible" }}>
             <line x1="0" y1="6" x2="22" y2="6" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4,2" />
             <polygon points="20,3 20,9 28,6" fill="#ef4444" />
           </svg>
-          <span>Blocked by (open)</span>
+          <span>{tr("Blocked by (open)")}</span>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:5 }}>
           <svg width="30" height="12" style={{ overflow:"visible" }}>
             <line x1="0" y1="6" x2="22" y2="6" stroke="#10b981" strokeWidth="1.5" />
             <polygon points="20,3 20,9 28,6" fill="#10b981" />
           </svg>
-          <span>Blocked by (resolved)</span>
+          <span>{tr("Blocked by (resolved)")}</span>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:5 }}>
           <div style={{ width:2, height:14, background:"var(--accent)", opacity:0.6 }} />
-          <span>Today</span>
+          <span>{tr("Today")}</span>
         </div>
       </div>
     </div>

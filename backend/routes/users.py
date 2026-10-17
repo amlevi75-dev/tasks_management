@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from typing import Optional
 from database import get_db
 from database import _ConnWrapper as DbConn
@@ -26,6 +27,20 @@ def list_users(
             "SELECT id, username, display_name, email FROM users WHERE is_active=1 ORDER BY display_name"
         ).fetchall()
     return [dict(r) for r in rows]
+
+class LanguageBody(BaseModel):
+    language: str
+
+
+@router.put("/me/language")
+def set_my_language(body: LanguageBody, user=Depends(get_current_user), db: DbConn = Depends(get_db)):
+    """Store the caller's UI language; emails and bell messages follow it."""
+    if body.language not in ("en", "he"):
+        raise HTTPException(400, "Unsupported language")
+    db.execute("UPDATE users SET language=%s WHERE id=%s", (body.language, user["user_id"]))
+    db.commit()
+    return {"ok": True, "language": body.language}
+
 
 @router.get("/notifications")
 def get_notifications(user=Depends(get_current_user), db: DbConn = Depends(get_db)):

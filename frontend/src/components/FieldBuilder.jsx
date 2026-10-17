@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { tr, trVal } from "../i18n";
 
 const TYPE_ICONS = { text:"T", number:"#", date:"📅", list:"☰" };
-const TYPE_LABELS = { text:"Text", number:"Number", date:"Date", list:"List" };
+const TYPE_LABELS = new Proxy({ text:"Text", number:"Number", date:"Date", list:"List" }, { get:(o,k)=>trVal("ftype", k, o[k]) });
 
 // ── Single field definition row ───────────────────────────────────────────────
 function FieldRow({ field, onChange, onDelete, index, onMoveUp, onMoveDown, isFirst, isLast }) {
@@ -40,7 +41,7 @@ function FieldRow({ field, onChange, onDelete, index, onMoveUp, onMoveDown, isFi
         }}>{TYPE_ICONS[field.field_type]}</div>
 
         {/* Label */}
-        <input className="input" placeholder="Field label…" value={field.label}
+        <input className="input" placeholder={tr("Field label…")} value={field.label}
           onChange={e => onChange(index, "label", e.target.value)}
           style={{ flex: 1, fontSize: 13 }} />
 
@@ -60,9 +61,9 @@ function FieldRow({ field, onChange, onDelete, index, onMoveUp, onMoveDown, isFi
 
       {/* List options */}
       {field.field_type === "list" && (
-        <div className="form-group" style={{ marginLeft: 36 }}>
-          <label className="form-label">Options (comma-separated)</label>
-          <input className="input" placeholder="e.g. Low, Medium, High, Critical"
+        <div className="form-group" style={{ marginInlineStart: 36 }}>
+          <label className="form-label">{tr("Options (comma-separated)")}</label>
+          <input className="input" placeholder={tr("e.g. Low, Medium, High, Critical")}
             value={optionsText} onChange={e => updateOptions(e.target.value)}
             style={{ fontSize: 13 }} />
           {optionsText && (
@@ -81,14 +82,14 @@ function FieldRow({ field, onChange, onDelete, index, onMoveUp, onMoveDown, isFi
       {/* Filterable toggle — controls whether this field appears as a filter
           in the list view and the analytics dashboard. */}
       <label style={{
-        display:"flex", alignItems:"center", gap:8, marginLeft:36,
+        display:"flex", alignItems:"center", gap:8, marginInlineStart:36,
         fontSize:12, color:"var(--text-secondary)", cursor:"pointer", userSelect:"none",
       }}>
         <input type="checkbox"
           checked={field.filterable == null ? true : !!field.filterable}
           onChange={e => onChange(index, "filterable", e.target.checked ? 1 : 0)}
           style={{ cursor:"pointer" }} />
-        Show as a filter (task list &amp; analytics)
+        {tr("Show as a filter (task list & analytics)")}
       </label>
     </div>
   );
@@ -134,7 +135,7 @@ export default function FieldBuilder({ fields, onChange }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {fields.length === 0 && (
         <div style={{ fontSize: 13, color: "var(--text-muted)", textAlign: "center", padding: "12px 0" }}>
-          No custom fields yet. Standard fields (status, priority, assignee, etc.) are always included.
+          {tr("No custom fields yet. Standard fields (status, priority, assignee, etc.) are always included.")}
         </div>
       )}
       {fields.map((f, i) => (
@@ -145,7 +146,7 @@ export default function FieldBuilder({ fields, onChange }) {
       ))}
       <button className="btn btn-ghost" onClick={add}
         style={{ alignSelf: "flex-start", gap: 6, marginTop: 4, fontSize: 13 }}>
-        + Add Field
+        {tr("+ Add Field")}
       </button>
     </div>
   );

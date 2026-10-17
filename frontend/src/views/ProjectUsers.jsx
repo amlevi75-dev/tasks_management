@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../App";
 import { useAuth } from "../App";
+import { tr, trVal } from "../i18n";
 
 const ROLE_COLORS  = { owner: "#f59e0b", member: "#3b82f6", viewer: "#64748b", light_member: "#8b5cf6" };
 const ROLE_LABELS  = { owner: "Owner", member: "Member", viewer: "Viewer", light_member: "Light Member" };
@@ -48,7 +49,7 @@ export default function ProjectUsers({ projectId, navigate }) {
   };
 
   const removeMember = async (userId) => {
-    if (!confirm("Remove this member from the project?")) return;
+    if (!confirm(tr("Remove this member from the project?"))) return;
     try {
       await apiFetch(`/projects/${projectId}/members/${userId}`, { method: "DELETE" });
       load();
@@ -64,7 +65,7 @@ export default function ProjectUsers({ projectId, navigate }) {
     } catch(e) { setError(e.message); }
   };
 
-  if (!project) return <div style={{ padding: 40, color: "var(--text-muted)", fontSize: 14 }}>Loading…</div>;
+  if (!project) return <div style={{ padding: 40, color: "var(--text-muted)", fontSize: 14 }}>{tr("Loading…")}</div>;
 
   return (
     <div style={{ padding: 28, maxWidth: 860, margin: "0 auto" }}>
@@ -75,14 +76,14 @@ export default function ProjectUsers({ projectId, navigate }) {
           ← {project.name}
         </button>
         <span>/</span>
-        <span>Members</span>
+        <span>{tr("Members")}</span>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700 }}>Project Members</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 700 }}>{tr("Project Members")}</h1>
           <p style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 4 }}>
-            Only members can see and interact with this project.
+            {tr("Only members can see and interact with this project.")}
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -99,7 +100,7 @@ export default function ProjectUsers({ projectId, navigate }) {
       <div style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", overflow: "hidden", marginBottom: 24 }}>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 120px 110px", padding: "10px 16px", borderBottom: "1px solid var(--border)", background: "var(--bg-elevated)" }}>
           {["Member", "Email", "Role", ""].map(h => (
-            <div key={h} style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</div>
+            <div key={h} style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{tr(h)}</div>
           ))}
         </div>
 
@@ -123,21 +124,21 @@ export default function ProjectUsers({ projectId, navigate }) {
                 <select className="select" value={m.role}
                   onChange={e => changeRole(m.id, e.target.value)}
                   style={{ color: ROLE_COLORS[m.role], fontSize: 12 }}>
-                  <option value="owner">Owner</option>
-                  <option value="member">Member</option>
-                  <option value="viewer">Viewer</option>
-                  <option value="light_member">Light Member</option>
+                  <option value="owner">{tr("Owner")}</option>
+                  <option value="member">{tr("Member")}</option>
+                  <option value="viewer">{tr("Viewer")}</option>
+                  <option value="light_member">{tr("Light Member")}</option>
                 </select>
               ) : (
                 <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99, background: `${ROLE_COLORS[m.role]}20`, color: ROLE_COLORS[m.role] }}>
-                  {m.role}
+                  {trVal("role", m.role)}
                 </span>
               )}
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               {isOwner && m.role !== "owner" && (
                 <button className="btn btn-ghost btn-sm" onClick={() => removeMember(m.id)}
-                  style={{ color: "var(--red)", borderColor: "rgba(239,68,68,0.3)" }}>Remove</button>
+                  style={{ color: "var(--red)", borderColor: "rgba(239,68,68,0.3)" }}>{tr("Remove")}</button>
               )}
             </div>
           </div>
@@ -147,10 +148,10 @@ export default function ProjectUsers({ projectId, navigate }) {
       {/* Add member — owners only */}
       {isOwner && (
         <div style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", padding: 20 }}>
-          <h2 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>Add Member</h2>
+          <h2 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>{tr("Add Member")}</h2>
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ position: "relative", flex: 1 }}>
-              <input className="input" placeholder="Search users by name or username…"
+              <input className="input" placeholder={tr("Search users by name or username…")}
                 value={search} onChange={e => { setSearch(e.target.value); setAdding(null); }} />
               {search && filtered.length > 0 && !adding && (
                 <div style={{
@@ -165,28 +166,28 @@ export default function ProjectUsers({ projectId, navigate }) {
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     >
                       <span style={{ fontWeight: 500 }}>{u.display_name}</span>
-                      <span style={{ color: "var(--text-muted)", marginLeft: 8, fontSize: 11 }}>@{u.username}</span>
+                      <span style={{ color: "var(--text-muted)", marginInlineStart: 8, fontSize: 11 }}>@{u.username}</span>
                     </div>
                   ))}
                 </div>
               )}
               {search && filtered.length === 0 && !adding && (
-                <div style={{ marginTop: 6, fontSize: 12, color: "var(--text-muted)" }}>No users found or all already members</div>
+                <div style={{ marginTop: 6, fontSize: 12, color: "var(--text-muted)" }}>{tr("No users found or all already members")}</div>
               )}
             </div>
             <select className="select" value={addRole} onChange={e => setAddRole(e.target.value)} style={{ minWidth: 110 }}>
-              <option value="member">Member</option>
-              <option value="viewer">Viewer</option>
-                  <option value="light_member">Light Member</option>
-              <option value="owner">Owner</option>
+              <option value="member">{tr("Member")}</option>
+              <option value="viewer">{tr("Viewer")}</option>
+                  <option value="light_member">{tr("Light Member")}</option>
+              <option value="owner">{tr("Owner")}</option>
             </select>
             <button className="btn btn-primary" onClick={addMember} disabled={!adding || busy}>
-              {busy ? "Adding…" : "Add"}
+              {busy ? tr("Adding…") : tr("Add")}
             </button>
           </div>
           {adding && (
             <p style={{ marginTop: 8, fontSize: 13, color: "var(--text-secondary)" }}>
-              Adding <b style={{ color: "var(--text-primary)" }}>{adding.display_name}</b> as <b>{addRole}</b>. Click Add to confirm.
+              {tr("Adding")} <b style={{ color: "var(--text-primary)" }}>{adding.display_name}</b> {tr("as")} <b>{trVal("role", addRole)}</b>{tr(". Click Add to confirm.")}
             </p>
           )}
         </div>

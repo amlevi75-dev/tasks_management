@@ -242,6 +242,9 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_task_collab_user   ON task_collaborators(user_id);
         CREATE INDEX IF NOT EXISTS idx_saved_views_lookup ON saved_views(project_id, user_id);
         CREATE INDEX IF NOT EXISTS idx_sessions_user      ON sessions(user_id);
+
+        -- UI / email language per user ('en' or 'he')
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT DEFAULT 'en';
         """)
         conn.commit()
     finally:

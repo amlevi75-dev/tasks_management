@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { apiFetch } from "../App";
+import { tr, trVal } from "../i18n";
 
 const TYPE_ICONS = { text:"T", number:"#", date:"📅", list:"☰" };
 
@@ -75,7 +76,7 @@ export default function CustomFieldValues({ taskId, projectId, isViewer = false,
 
   return (
     <div style={{ borderTop:"1px solid var(--border)", paddingTop:14, marginTop:4 }}>
-      <div className="form-label" style={{ marginBottom:12 }}>Custom Fields</div>
+      <div className="form-label" style={{ marginBottom:12 }}>{tr("Custom Fields")}</div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
         {fields.map(f => {
           // Safely parse options — always scoped to this field
@@ -89,7 +90,7 @@ export default function CustomFieldValues({ taskId, projectId, isViewer = false,
                 <span style={{ fontSize:10, opacity:0.7 }}>{TYPE_ICONS[f.field_type]}</span>
                 {f.label}
                 {f.required ? <span style={{ color:"var(--red)", fontSize:10 }}>*</span> : null}
-                {isSaving && <span style={{ fontSize:10, color:"var(--accent)", marginLeft:"auto" }}>saving…</span>}
+                {isSaving && <span style={{ fontSize:10, color:"var(--accent)", marginInlineStart:"auto" }}>{tr("saving…")}</span>}
               </label>
 
               {f.field_type === "list" ? (
@@ -97,7 +98,7 @@ export default function CustomFieldValues({ taskId, projectId, isViewer = false,
                   value={f.value ?? ""}
                   disabled={isViewer}
                   onChange={e => onChange(f.field_id, e.target.value, true)}>
-                  <option value="">— Select —</option>
+                  <option value="">{tr("— Select —")}</option>
                   {opts.map(o => (
                     // Key scoped to field_id + option to prevent cross-field bleeding
                     <option key={`${f.field_id}-${o}`} value={o}>{o}</option>
@@ -118,7 +119,7 @@ export default function CustomFieldValues({ taskId, projectId, isViewer = false,
               ) : (
                 <input type="text" className="input"
                   style={{ fontSize:13 }}
-                  placeholder="Enter value…"
+                  placeholder={tr("Enter value…")}
                   value={f.value ?? ""}
                   disabled={isViewer}
                   onChange={e => onChange(f.field_id, e.target.value)} />

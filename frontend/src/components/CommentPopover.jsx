@@ -1,6 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { apiFetch, fmtDateTime, isRTL, renderCommentMarkdown } from "../App";
+import { tr, trVal } from "../i18n";
 
 /**
  * Comment thread in a popover, opened from a list-view row.
@@ -193,7 +194,7 @@ export default function CommentPopover({
   // into the existing dropdown/insert logic with no special-case markup.
   // Filtered and ranked alongside real members rather than always pinned
   // first, so typing e.g. "am" still finds "Amit" without "all" crowding it.
-  const ALL_ENTRY = { id: "all", username: "all", display_name: "Everyone (@all)" };
+  const ALL_ENTRY = { id: "all", username: "all", display_name: tr("Everyone (@all)") };
 
   const matches = mentionQuery !== null
     ? [ALL_ENTRY, ...members].filter(m =>
@@ -224,7 +225,7 @@ export default function CommentPopover({
           background: known ? "rgba(139,92,246,0.15)" : "var(--bg-surface)",
           color: known ? "#a78bfa" : "var(--text-muted)",
           borderRadius:4, padding:"0 4px", fontWeight:600,
-        }} title={part}>{isAll ? "@all" : m ? `@${m.display_name}` : part}</span>
+        }} title={part}>{isAll ? tr("@all") : m ? `@${m.display_name}` : part}</span>
       );
     });
   };
@@ -244,7 +245,7 @@ export default function CommentPopover({
       setN(rows.length);
       onPosted?.(taskId, rows.length);
     } catch (e) {
-      setError(e.message || "Could not post comment");
+      setError(e.message || tr("Could not post comment"));
     } finally {
       setBusy(false);
     }
@@ -278,16 +279,16 @@ export default function CommentPopover({
           {taskTitle}
         </span>
         <button onClick={()=>setOpen(false)}
-          style={{ marginLeft:"auto", background:"none", border:"none",
+          style={{ marginInlineStart:"auto", background:"none", border:"none",
                    color:"var(--text-muted)", cursor:"pointer", fontSize:15, lineHeight:1 }}>×</button>
       </div>
 
       <div style={{ flex:1, overflowY:"auto", padding:"12px 14px",
                     display:"flex", flexDirection:"column", gap:11, minHeight:120 }}>
-        {loading && <div style={{ fontSize:12, color:"var(--text-muted)" }}>Loading…</div>}
+        {loading && <div style={{ fontSize:12, color:"var(--text-muted)" }}>{tr("Loading…")}</div>}
         {!loading && comments.length === 0 && (
           <div style={{ fontSize:12, color:"var(--text-muted)", textAlign:"center", padding:"10px 0" }}>
-            No comments yet
+            {tr("No comments yet")}
           </div>
         )}
         {comments.map(c => (
@@ -300,7 +301,7 @@ export default function CommentPopover({
                 display:"flex", alignItems:"center", justifyContent:"center",
               }}>{(c.display_name||"?")[0]}</div>
               <span style={{ fontSize:12, fontWeight:600, color:"var(--text-primary)" }}>{c.display_name}</span>
-              <span style={{ fontSize:11, color:"var(--text-muted)", marginLeft:"auto" }}>
+              <span style={{ fontSize:11, color:"var(--text-muted)", marginInlineStart:"auto" }}>
                 {fmtDateTime(c.created_at)}
               </span>
             </div>
@@ -328,7 +329,7 @@ export default function CommentPopover({
             }}>
               <div style={{ padding:"5px 10px", fontSize:9, fontWeight:700,
                             color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.5px" }}>
-                Mention a member
+                {tr("Mention a member")}
               </div>
               {matches.map(m => (
                 <div key={m.id}
@@ -357,19 +358,19 @@ export default function CommentPopover({
           )}
 
           <div style={{ display:"flex", gap:4 }}>
-            <button type="button" title="Bold" onMouseDown={e=>{e.preventDefault(); wrapSelection("**");}}
+            <button type="button" title={tr("Bold")} onMouseDown={e=>{e.preventDefault(); wrapSelection("**");}}
               style={{ width:24, height:24, display:"flex", alignItems:"center", justifyContent:"center",
                        borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:700,
                        border:"1px solid var(--border-soft)", background:"var(--bg-elevated)", color:"var(--text-secondary)" }}>
               B
             </button>
-            <button type="button" title="Italic" onMouseDown={e=>{e.preventDefault(); wrapSelection("*");}}
+            <button type="button" title={tr("Italic")} onMouseDown={e=>{e.preventDefault(); wrapSelection("*");}}
               style={{ width:24, height:24, display:"flex", alignItems:"center", justifyContent:"center",
                        borderRadius:5, cursor:"pointer", fontSize:12, fontStyle:"italic",
                        border:"1px solid var(--border-soft)", background:"var(--bg-elevated)", color:"var(--text-secondary)" }}>
               I
             </button>
-            <button type="button" title="Numbered list" onMouseDown={e=>{e.preventDefault(); insertNumberedList();}}
+            <button type="button" title={tr("Numbered list")} onMouseDown={e=>{e.preventDefault(); insertNumberedList();}}
               style={{ width:24, height:24, display:"flex", alignItems:"center", justifyContent:"center",
                        borderRadius:5, cursor:"pointer", fontSize:11,
                        border:"1px solid var(--border-soft)", background:"var(--bg-elevated)", color:"var(--text-secondary)" }}>
@@ -380,7 +381,7 @@ export default function CommentPopover({
             ref={taRef}
             className="input"
             rows={2}
-            placeholder="Write a comment…  type @ to mention  (Ctrl+Enter sends)"
+            placeholder={tr("Write a comment…  type @ to mention  (Ctrl+Enter sends)")}
             value={text}
             onChange={onTextChange}
             onKeyDown={e => {
@@ -428,11 +429,11 @@ export default function CommentPopover({
             }}
           />
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ fontSize:10, color:"var(--text-muted)" }}>@ to mention</span>
+            <span style={{ fontSize:10, color:"var(--text-muted)" }}>{tr("@ to mention")}</span>
             <button className="btn btn-primary btn-sm"
-              style={{ marginLeft:"auto", fontSize:12 }}
+              style={{ marginInlineStart:"auto", fontSize:12 }}
               onClick={post} disabled={busy || !text.trim()}>
-              {busy ? "Sending…" : "Send"}
+              {busy ? tr("Sending…") : tr("Send")}
             </button>
           </div>
         </div>
@@ -445,7 +446,7 @@ export default function CommentPopover({
       <button
         ref={btnRef}
         onClick={e => { e.stopPropagation(); setOpen(o=>!o); }}
-        title={n ? `${n} comment${n===1?"":"s"}` : "Add a comment"}
+        title={n ? `${n} comment${n===1?"":"s"}` : tr("Add a comment")}
         style={{
           display:"inline-flex", alignItems:"center", gap:4,
           background: open ? "var(--bg-elevated)" : "transparent",

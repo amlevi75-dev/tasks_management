@@ -7,12 +7,13 @@ import TrashPanel from "../components/TrashPanel";
 import FieldBuilder from "../components/FieldBuilder";
 import InlineEdit from "../components/InlineEdit";
 import CommentPopover from "../components/CommentPopover";
+import { tr, trVal, getLang } from "../i18n";
 
 const STATUSES = [
-  { key:"new",         label:"New",         color:"#64748b" },
-  { key:"open",        label:"Open",        color:"#3b82f6" },
-  { key:"in_progress", label:"In Progress", color:"#f59e0b" },
-  { key:"done",        label:"Done",        color:"#10b981" },
+  { key:"new",         get label(){ return tr("New"); },         color:"#64748b" },
+  { key:"open",        get label(){ return tr("Open"); },        color:"#3b82f6" },
+  { key:"in_progress", get label(){ return tr("In Progress"); }, color:"#f59e0b" },
+  { key:"done",        get label(){ return tr("Done"); },        color:"#10b981" },
 ];
 const PRIO_COLORS = { low:"#10b981", medium:"#3b82f6", high:"#f59e0b", critical:"#ef4444" };
 const COLORS = ["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#06b6d4","#f97316","#ec4899"];
@@ -224,7 +225,7 @@ export default function ProjectView({ projectId, navigate }) {
     } catch { load(); }
   };
 
-  if (!project) return <div style={{ padding:40, color:"var(--text-muted)", fontSize:14 }}>Loading…</div>;
+  if (!project) return <div style={{ padding:40, color:"var(--text-muted)", fontSize:14 }}>{tr("Loading…")}</div>;
 
   const isViewer = project.role === "viewer";
   const isOwner  = project.role === "owner";
@@ -245,7 +246,7 @@ export default function ProjectView({ projectId, navigate }) {
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
               <h1 style={{ fontSize:16, fontWeight:700, margin:0 }}>{project.name}</h1>
               {isOwner && (
-                <button onClick={()=>setShowSettings(true)} title="Rename / Settings"
+                <button onClick={()=>setShowSettings(true)} title={tr("Rename / Settings")}
                   style={{ background:"none", border:"none", color:"var(--text-muted)", cursor:"pointer", fontSize:15, padding:"2px 4px", borderRadius:4 }}
                   onMouseEnter={e=>e.currentTarget.style.color="var(--text-primary)"}
                   onMouseLeave={e=>e.currentTarget.style.color="var(--text-muted)"}
@@ -262,32 +263,32 @@ export default function ProjectView({ projectId, navigate }) {
                   padding:"5px 10px", border:"none", borderRadius:5, fontSize:12, fontWeight:500, cursor:"pointer",
                   background: view===v?"var(--accent)":"transparent",
                   color: view===v?"#fff":"var(--text-secondary)",
-                }}>{label}</button>
+                }}>{tr(label)}</button>
               ))}
             </div>
           <button className="btn btn-ghost btn-sm"
             onClick={()=>navigate({name:"project-analytics",params:{projectId}})}
-            title="Analytics">📊 Analytics</button>
-            {!isViewer && <button className="btn btn-primary btn-sm" onClick={()=>setShowNewTask(true)}>+ Task</button>}
-            <button className="btn btn-ghost btn-sm" onClick={()=>setShowTrash(true)} title="Trash">🗑</button>
+            title={tr("Analytics")}>{tr("📊 Analytics")}</button>
+            {!isViewer && <button className="btn btn-primary btn-sm" onClick={()=>setShowNewTask(true)}>{tr("+ Task")}</button>}
+            <button className="btn btn-ghost btn-sm" onClick={()=>setShowTrash(true)} title={tr("Trash")}>🗑</button>
           </div>
         </div>
 
         {/* Filters */}
         <div style={{ display:"flex", gap:8 }}>
           <select className="select" value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}>
-            <option value="">All Statuses</option>
+            <option value="">{tr("All Statuses")}</option>
             {STATUSES.map(s=><option key={s.key} value={s.key}>{s.label}</option>)}
           </select>
           {!isLight && (
             <select className="select" value={filterAssignee} onChange={e=>setFilterAssignee(e.target.value)}>
-              <option value="">All Assignees</option>
+              <option value="">{tr("All Assignees")}</option>
               {members.map(u=><option key={u.id} value={String(u.id)}>{u.display_name}</option>)}
             </select>
           )}
           {categories.length > 0 && (
             <select className="select" value={filterCategory} onChange={e=>setFilterCategory(e.target.value)}>
-              <option value="">All Categories</option>
+              <option value="">{tr("All Categories")}</option>
               {categories.map(c=><option key={c.id} value={String(c.id)}>{c.name}</option>)}
             </select>
           )}
@@ -306,7 +307,7 @@ export default function ProjectView({ projectId, navigate }) {
             }
             return f.field_type === "list" ? (
               <select key={fid} className="select" value={val} onChange={e=>set(e.target.value)}>
-                <option value="">All {f.label}</option>
+                <option value="">{tr("All")} {f.label}</option>
                 {opts.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
             ) : (
@@ -321,14 +322,14 @@ export default function ProjectView({ projectId, navigate }) {
             <button onClick={()=>setFieldFilters({})}
               style={{ background:"none", border:"none", color:"var(--text-muted)",
                        cursor:"pointer", fontSize:11 }}>
-              ✕ clear field filters
+              {tr("✕ clear field filters")}
             </button>
           )}
 
           <label style={{ display:"flex", alignItems:"center", gap:5, fontSize:12,
                           color:"var(--text-secondary)", cursor:"pointer", userSelect:"none" }}>
             <input type="checkbox" checked={hideDone} onChange={e=>setHideDone(e.target.checked)} />
-            Hide Done
+            {tr("Hide Done")}
           </label>
 
           {view === "list" && (
@@ -343,24 +344,24 @@ export default function ProjectView({ projectId, navigate }) {
           )}
 
           {view === "list" && categories.length > 0 && (
-            <div style={{ display:"flex", alignItems:"center", gap:6, marginLeft:4 }}>
-              <span style={{ fontSize:11, color:"var(--text-muted)" }}>Group by</span>
+            <div style={{ display:"flex", alignItems:"center", gap:6, marginInlineStart:4 }}>
+              <span style={{ fontSize:11, color:"var(--text-muted)" }}>{tr("Group by")}</span>
               <div style={{ display:"flex", border:"1px solid var(--border)", borderRadius:6, overflow:"hidden" }}>
                 {[["status","Status"],["category","Category"]].map(([v,label])=>(
                   <button key={v} onClick={()=>setGroupBy(v)}
                     style={{
                       padding:"4px 10px", fontSize:12, border:"none", cursor:"pointer",
-                      borderRight: v==="status" ? "1px solid var(--border)" : "none",
+                      borderInlineEnd: v==="status" ? "1px solid var(--border)" : "none",
                       background: groupBy===v ? "var(--accent)" : "var(--bg-elevated)",
                       color:      groupBy===v ? "#fff" : "var(--text-secondary)",
                       fontWeight: groupBy===v ? 600 : 400,
-                    }}>{label}</button>
+                    }}>{tr(label)}</button>
                 ))}
               </div>
             </div>
           )}
-          <span style={{ fontSize:12, color:"var(--text-muted)", alignSelf:"center", marginLeft:4 }}>
-            {filteredTasks.length} task{filteredTasks.length!==1?"s":""}
+          <span style={{ fontSize:12, color:"var(--text-muted)", alignSelf:"center", marginInlineStart:4 }}>
+            {tr(filteredTasks.length === 1 ? "1 task" : "{n} tasks", { n: filteredTasks.length })}
           </span>
         </div>
       </div>
@@ -417,7 +418,7 @@ function ProjectSettingsModal({ project, onClose, onSaved, onDeleted }) {
     apiFetch(`/projects/${project.id}/categories`).then(setCats).catch(() => {});
   }, [project.id]);
   const save = async () => {
-    if (!form.name.trim()) { setError("Name required"); return; }
+    if (!form.name.trim()) { setError(tr("Name required")); return; }
     setLoading(true); setError("");
     try { const u = await apiFetch(`/projects/${project.id}`, { method:"PATCH", body:JSON.stringify(form) }); onSaved(u); }
     catch(e) { setError(e.message); }
@@ -470,12 +471,12 @@ function ProjectSettingsModal({ project, onClose, onSaved, onDeleted }) {
   };
   const archiveProject = async () => {
     const action = project.archived ? "unarchive" : "archive";
-    if (!confirm(`${action.charAt(0).toUpperCase()+action.slice(1)} "${project.name}"?`)) return;
+    if (!confirm(tr('{action} "{name}"?', { action: tr(action==="archive"?"Archive":"Unarchive"), name:project.name }))) return;
     await apiFetch(`/projects/${project.id}/${action}`, { method:"POST" });
     onSaved({ archived: project.archived ? 0 : 1 });
   };
   const del = async () => {
-    if (!confirm(`Delete "${project.name}" and ALL its tasks?`)) return;
+    if (!confirm(tr('Delete "{name}" and ALL its tasks?', { name:project.name }))) return;
     await apiFetch(`/projects/${project.id}`, { method:"DELETE" });
     onDeleted();
   };
@@ -483,7 +484,7 @@ function ProjectSettingsModal({ project, onClose, onSaved, onDeleted }) {
     <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal" style={{ maxWidth:580 }}>
         <div className="modal-header">
-          <span style={{ fontWeight:600, fontSize:15 }}>Project Settings — {project.name}</span>
+          <span style={{ fontWeight:600, fontSize:15 }}>{tr("Project Settings —")} {project.name}</span>
           <button className="btn btn-ghost btn-sm" onClick={onClose}>×</button>
         </div>
 
@@ -494,30 +495,30 @@ function ProjectSettingsModal({ project, onClose, onSaved, onDeleted }) {
               color: settingsTab===t?"var(--accent)":"var(--text-muted)",
               borderBottom: settingsTab===t?"2px solid var(--accent)":"2px solid transparent",
               fontSize:13, fontWeight:500, cursor:"pointer", whiteSpace:"nowrap",
-            }}>{label}</button>
+            }}>{tr(label)}</button>
           ))}
         </div>
 
         {settingsTab==="general" && (
           <div className="modal-body">
-            <div className="form-group"><label className="form-label">Project Name</label>
+            <div className="form-group"><label className="form-label">{tr("Project Name")}</label>
               <input className="input" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} /></div>
-            <div className="form-group"><label className="form-label">Description</label>
+            <div className="form-group"><label className="form-label">{tr("Description")}</label>
               <textarea className="input" rows={2} value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} /></div>
-            <div className="form-group"><label className="form-label">Color</label>
+            <div className="form-group"><label className="form-label">{tr("Color")}</label>
               <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                 {COLORS.map(c=><button key={c} onClick={()=>setForm(f=>({...f,color:c}))} style={{ width:28, height:28, borderRadius:"50%", background:c, border:"none", outline:form.color===c?"3px solid #fff":"none", outlineOffset:2, cursor:"pointer" }} />)}
               </div></div>
             {error && <div style={{ color:"#fca5a5", fontSize:13, background:"rgba(239,68,68,0.1)", padding:"8px 12px", borderRadius:6 }}>{error}</div>}
             <div style={{ borderTop:"1px solid var(--border)", paddingTop:14 }}>
-              <p style={{ fontSize:12, color:"var(--text-muted)", fontWeight:600, marginBottom:8 }}>Project Actions</p>
+              <p style={{ fontSize:12, color:"var(--text-muted)", fontWeight:600, marginBottom:8 }}>{tr("Project Actions")}</p>
               <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                 <button className="btn btn-ghost btn-sm" onClick={archiveProject} style={{ borderColor:"var(--yellow)", color:"var(--yellow)" }}>
-                  {project.archived ? "📦 Unarchive Project" : "📦 Archive Project"}
+                  {project.archived ? tr("📦 Unarchive Project") : tr("📦 Archive Project")}
                 </button>
-                <button className="btn btn-danger btn-sm" onClick={del}>Delete Project</button>
+                <button className="btn btn-danger btn-sm" onClick={del}>{tr("Delete Project")}</button>
               </div>
-              {project.archived && <p style={{ fontSize:11, color:"var(--text-muted)", marginTop:8 }}>This project is archived. Unarchive to resume work.</p>}
+              {project.archived && <p style={{ fontSize:11, color:"var(--text-muted)", marginTop:8 }}>{tr("This project is archived. Unarchive to resume work.")}</p>}
             </div>
           </div>
         )}
@@ -525,7 +526,7 @@ function ProjectSettingsModal({ project, onClose, onSaved, onDeleted }) {
         {settingsTab==="categories" && (
           <div className="modal-body">
             <p style={{ fontSize:12, color:"var(--text-muted)", marginBottom:10 }}>
-              Categories appear as a dropdown on every task in this project.
+              {tr("Categories appear as a dropdown on every task in this project.")}
             </p>
             <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:12 }}>
               {cats.map(c => (
@@ -535,14 +536,14 @@ function ProjectSettingsModal({ project, onClose, onSaved, onDeleted }) {
                   <button onClick={()=>deleteCat(c.id)} style={{ background:"none", border:"none", color:"var(--text-muted)", cursor:"pointer", fontSize:16 }}>×</button>
                 </div>
               ))}
-              {cats.length===0 && <div style={{ fontSize:12, color:"var(--text-muted)", textAlign:"center", padding:"10px 0" }}>No categories yet</div>}
+              {cats.length===0 && <div style={{ fontSize:12, color:"var(--text-muted)", textAlign:"center", padding:"10px 0" }}>{tr("No categories yet")}</div>}
             </div>
             <div style={{ display:"flex", gap:8 }}>
-              <input className="input" placeholder="New category name…" value={newCatName}
+              <input className="input" placeholder={tr("New category name…")} value={newCatName}
                 onChange={e=>setNewCatName(e.target.value)}
                 onKeyDown={e=>e.key==="Enter"&&addCat()}
                 style={{ flex:1, fontSize:13 }} />
-              <button className="btn btn-primary btn-sm" onClick={addCat} disabled={catBusy||!newCatName.trim()}>Add</button>
+              <button className="btn btn-primary btn-sm" onClick={addCat} disabled={catBusy||!newCatName.trim()}>{tr("Add")}</button>
             </div>
             {error && <div style={{ color:"#fca5a5", fontSize:13, marginTop:8 }}>{error}</div>}
           </div>
@@ -551,7 +552,7 @@ function ProjectSettingsModal({ project, onClose, onSaved, onDeleted }) {
         {settingsTab==="fields" && (
           <div className="modal-body">
             <p style={{ fontSize:12, color:"var(--text-muted)", marginBottom:10 }}>
-              These fields appear on every task in this project, below the standard fields.
+              {tr("These fields appear on every task in this project, below the standard fields.")}
             </p>
             <FieldBuilder fields={fields} onChange={setFields} />
             {error && <div style={{ color:"#fca5a5", fontSize:13, background:"rgba(239,68,68,0.1)", padding:"8px 12px", borderRadius:6 }}>{error}</div>}
@@ -559,12 +560,12 @@ function ProjectSettingsModal({ project, onClose, onSaved, onDeleted }) {
         )}
 
         <div className="modal-footer">
-          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-ghost" onClick={onClose}>{tr("Cancel")}</button>
           {settingsTab==="general" && (
-            <button className="btn btn-primary" onClick={save} disabled={loading}>{loading?"Saving…":"Save Changes"}</button>
+            <button className="btn btn-primary" onClick={save} disabled={loading}>{loading?tr("Saving…"):tr("Save Changes")}</button>
           )}
           {settingsTab==="fields" && (
-            <button className="btn btn-primary" onClick={saveFields} disabled={fieldsBusy}>{fieldsBusy?"Saving…":"Save Fields"}</button>
+            <button className="btn btn-primary" onClick={saveFields} disabled={fieldsBusy}>{fieldsBusy?tr("Saving…"):tr("Save Fields")}</button>
           )}
         </div>
       </div>
@@ -589,7 +590,7 @@ function BoardView({ statuses, tasksByStatus, subtaskMap, onEdit, onDrop }) {
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10, padding:"0 4px" }}>
             <span style={{ width:10, height:10, borderRadius:"50%", background:s.color }} />
             <span style={{ fontSize:12, fontWeight:700, color:"var(--text-secondary)", textTransform:"uppercase", letterSpacing:"0.5px" }}>{s.label}</span>
-            <span style={{ marginLeft:"auto", fontSize:11, background:"var(--bg-elevated)", padding:"1px 7px", borderRadius:10, color:"var(--text-muted)" }}>
+            <span style={{ marginInlineStart:"auto", fontSize:11, background:"var(--bg-elevated)", padding:"1px 7px", borderRadius:10, color:"var(--text-muted)" }}>
               {(tasksByStatus[s.key]||[]).length}
             </span>
           </div>
@@ -606,7 +607,7 @@ function BoardView({ statuses, tasksByStatus, subtaskMap, onEdit, onDrop }) {
                 </div>
                 {/* Subtasks — indented, not draggable */}
                 {(subtaskMap[t.id]||[]).map(sub => (
-                  <div key={sub.id} style={{ marginLeft:16, marginTop:4 }}>
+                  <div key={sub.id} style={{ marginInlineStart:16, marginTop:4 }}>
                     <SubtaskRow task={sub} onClick={()=>onEdit(sub)} />
                   </div>
                 ))}
@@ -614,7 +615,7 @@ function BoardView({ statuses, tasksByStatus, subtaskMap, onEdit, onDrop }) {
             ))}
             {(tasksByStatus[s.key]||[]).length===0 && (
               <div style={{ border:`2px dashed ${overCol===s.key?s.color:"var(--border-soft)"}`, borderRadius:8, padding:"24px 0", textAlign:"center", color:overCol===s.key?s.color:"var(--text-muted)", fontSize:12, transition:"all 0.15s" }}>
-                {overCol===s.key?"Drop here":"Empty"}
+                {overCol===s.key?tr("Drop here"):tr("Empty")}
               </div>
             )}
           </div>
@@ -632,7 +633,7 @@ function SubtaskRow({ task, onClick }) {
     <div onClick={onClick} style={{
       display:"flex", alignItems:"center", gap:8, padding:"6px 10px",
       background:"var(--bg-elevated)", borderRadius:6,
-      border:"1px solid var(--border)", borderLeft:`3px solid ${pc}`,
+      border:"1px solid var(--border)", borderInlineStart:`3px solid ${pc}`,
       cursor:"pointer", transition:"background 0.1s",
     }}
       onMouseEnter={e=>e.currentTarget.style.background="var(--bg-hover)"}
@@ -644,7 +645,7 @@ function SubtaskRow({ task, onClick }) {
         color: task.status==="done"?"var(--text-muted)":"var(--text-primary)",
       }}>{task.title}</span>
       <span style={{ fontSize:9, fontWeight:700, padding:"1px 5px", borderRadius:3, background:`${sc}20`, color:sc, flexShrink:0 }}>
-        {task.status.replace("_"," ")}
+        {trVal("status", task.status, task.status.replace("_"," "))}
       </span>
       {task.assignee_name && (
         <span title={task.assignee_name} style={{ width:18, height:18, borderRadius:"50%", background:`hsl(${(task.assignee_id*67)%360},50%,38%)`, color:"#fff", fontSize:9, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
@@ -686,7 +687,7 @@ function ListView({
         const none = all.filter(t => t.category_id == null);
         // Only show the catch-all when something is actually in it
         if (none.length) out.push({
-          key:"cat-none", label:"Uncategorized", color:"#64748b",
+          key:"cat-none", label:tr("Uncategorized"), color:"#64748b",
           tasks:none, preset:{},
         });
         return out;
@@ -739,7 +740,7 @@ function ListView({
               <span style={{ fontSize:11, background:`${s.color}20`, color:s.color, padding:"2px 9px", borderRadius:10, fontWeight:600 }}>
                 {list.length}{totalWithSubs>list.length?` + ${totalWithSubs-list.length} sub`:""}
               </span>
-              <span style={{ marginLeft:"auto", fontSize:13, color:"var(--text-muted)" }}>{isCollapsed?"▶":"▼"}</span>
+              <span style={{ marginInlineStart:"auto", fontSize:13, color:"var(--text-muted)" }}>{isCollapsed?(getLang()==="he"?"◀":"▶"):"▼"}</span>
             </div>
 
             {!isCollapsed && (
@@ -747,11 +748,11 @@ function ListView({
                 <div style={{ minWidth:"fit-content" }}>
                   <div style={{ display:"grid", gridTemplateColumns:gridCols, gap:10, padding:"7px 16px", borderBottom:"1px solid var(--border)" }}>
                     {headers.map((h,i)=>(
-                      <div key={i} style={{ fontSize:10, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.5px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }} title={h}>{h}</div>
+                      <div key={i} style={{ fontSize:10, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.5px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }} title={tr(h)}>{tr(h)}</div>
                     ))}
                   </div>
                   {list.length===0 && (
-                    <div style={{ padding:"16px", color:"var(--text-muted)", fontSize:13 }}>No tasks</div>
+                    <div style={{ padding:"16px", color:"var(--text-muted)", fontSize:13 }}>{tr("No tasks")}</div>
                   )}
                   {list.map(t => (
                     <TaskRowGroup key={t.id} task={t} subtasks={subtaskMap[t.id]||[]}
@@ -828,8 +829,8 @@ function ListRow({
         {!indent && subtaskCount > 0 && (
           <button
             onClick={e => { e.stopPropagation(); onToggleSubtasks?.(); }}
-            title={subtasksExpanded ? `Collapse ${subtaskCount} subtask${subtaskCount===1?"":"s"}`
-                                     : `Expand ${subtaskCount} subtask${subtaskCount===1?"":"s"}`}
+            title={subtasksExpanded ? tr(subtaskCount===1 ? "Collapse 1 subtask" : "Collapse {n} subtasks", { n:subtaskCount })
+                                     : tr(subtaskCount===1 ? "Expand 1 subtask" : "Expand {n} subtasks", { n:subtaskCount })}
             style={{
               flexShrink:0, width:16, height:16, lineHeight:1,
               display:"flex", alignItems:"center", justifyContent:"center",
@@ -847,7 +848,7 @@ function ListRow({
         {!indent && canEdit && onAddSubtaskClick && (
           <button
             onClick={e => { e.stopPropagation(); onAddSubtaskClick(); }}
-            title="Add a subtask"
+            title={tr("Add a subtask")}
             className="row-add-sub"
             style={{
               flexShrink:0, width:18, height:18, lineHeight:1,
@@ -880,7 +881,7 @@ function ListRow({
                   <span style={{
                     fontSize:10, fontWeight:600, color:"var(--text-muted)",
                     background:"var(--bg-elevated)", border:"1px solid var(--border-soft)",
-                    borderRadius:99, padding:"0 6px", marginLeft:6, flexShrink:0,
+                    borderRadius:99, padding:"0 6px", marginInlineStart:6, flexShrink:0,
                   }}>{subtaskCount}</span>
                 )}
               </>
@@ -916,7 +917,7 @@ function ListRow({
         type="select"
         value={t.priority}
         readOnly={!canEdit}
-        options={["low","medium","high","critical"].map(p=>({ value:p, label:p }))}
+        options={["low","medium","high","critical"].map(p=>({ value:p, label:trVal("prio", p, p.charAt(0).toUpperCase()+p.slice(1)) }))}
         onSave={v => saveTask("priority", v)}
         render={v => (
           <span style={{
@@ -925,7 +926,7 @@ function ListRow({
             background:PRIO_COLORS[v]||"#3b82f6", color:"#fff",
             textTransform:"capitalize", letterSpacing:"0.2px",
             overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
-          }}>{v}</span>
+          }}>{trVal("prio", v)}</span>
         )}
       />
 
@@ -934,10 +935,10 @@ function ListRow({
         type="select"
         value={t.assignee_id != null ? String(t.assignee_id) : ""}
         readOnly={!canEdit}
-        placeholder="Unassigned"
+        placeholder={tr("Unassigned")}
         options={members.map(m=>({ value:String(m.id), label:m.display_name }))}
         onSave={v => saveTask("assignee_id", v ? Number(v) : null)}
-        render={() => t.assignee_name || <span style={{ color:"var(--text-muted)" }}>Unassigned</span>}
+        render={() => t.assignee_name || <span style={{ color:"var(--text-muted)" }}>{tr("Unassigned")}</span>}
       />
 
       {/* Due date */}
@@ -1038,7 +1039,7 @@ function QuickAddRow({ preset = {}, groupLabel, gridCols, onCreate }) {
       setTitle("");
       inputRef.current?.focus();      // ready for the next one
     } catch (e) {
-      setError(e.message || "Could not create task");
+      setError(e.message || tr("Could not create task"));
     } finally {
       setBusy(false);
     }
@@ -1059,7 +1060,7 @@ function QuickAddRow({ preset = {}, groupLabel, gridCols, onCreate }) {
                            e.currentTarget.style.color="var(--text-muted)"; }}
       >
         <span style={{ fontSize:14, lineHeight:1 }}>+</span>
-        Add task to {groupLabel}
+        {tr("Add task to")} {groupLabel}
       </div>
     );
   }
@@ -1071,7 +1072,7 @@ function QuickAddRow({ preset = {}, groupLabel, gridCols, onCreate }) {
         <input
           ref={inputRef}
           className="input"
-          placeholder={`New task in ${groupLabel}…`}
+          placeholder={tr("New task in {group}…", { group:groupLabel })}
           value={title}
           disabled={busy}
           onChange={e=>setTitle(e.target.value)}
@@ -1085,14 +1086,14 @@ function QuickAddRow({ preset = {}, groupLabel, gridCols, onCreate }) {
         <div style={{ gridColumn:"2 / -1", display:"flex", alignItems:"center", gap:8 }}>
           <button className="btn btn-primary btn-sm" onMouseDown={e=>e.preventDefault()}
             onClick={submit} disabled={busy || !title.trim()} style={{ fontSize:12 }}>
-            {busy ? "Adding…" : "Add"}
+            {busy ? tr("Adding…") : tr("Add")}
           </button>
           <button className="btn btn-ghost btn-sm" onMouseDown={e=>e.preventDefault()}
             onClick={()=>{ setTitle(""); setActive(false); }} style={{ fontSize:12 }}>
-            Cancel
+            {tr("Cancel")}
           </button>
           <span style={{ fontSize:11, color:"var(--text-muted)" }}>
-            Enter adds and stays open · Esc closes · edit the other fields inline
+            {tr("Enter adds and stays open · Esc closes · edit the other fields inline")}
           </span>
         </div>
       </div>
@@ -1166,7 +1167,7 @@ function SubtaskAddRow({ parent, gridCols, onCreate, onClose }) {
       setTitle("");
       inputRef.current?.focus();     // stay open for the next subtask
     } catch (e) {
-      setError(e.message || "Could not create subtask");
+      setError(e.message || tr("Could not create subtask"));
     } finally {
       setBusy(false);
     }
@@ -1181,7 +1182,7 @@ function SubtaskAddRow({ parent, gridCols, onCreate, onClose }) {
           <input
             ref={inputRef}
             className="input"
-            placeholder={`New subtask of "${parent.title}"…`}
+            placeholder={tr('New subtask of "{title}"…', { title:parent.title })}
             value={title}
             disabled={busy}
             onChange={e=>setTitle(e.target.value)}
@@ -1197,12 +1198,12 @@ function SubtaskAddRow({ parent, gridCols, onCreate, onClose }) {
         <div style={{ gridColumn:"2 / -1", display:"flex", alignItems:"center", gap:8 }}>
           <button className="btn btn-primary btn-sm" onMouseDown={e=>e.preventDefault()}
             onClick={submit} disabled={busy || !title.trim()} style={{ fontSize:12 }}>
-            {busy ? "Adding…" : "Add subtask"}
+            {busy ? tr("Adding…") : tr("Add subtask")}
           </button>
           <button className="btn btn-ghost btn-sm" onMouseDown={e=>e.preventDefault()}
-            onClick={onClose} style={{ fontSize:12 }}>Cancel</button>
+            onClick={onClose} style={{ fontSize:12 }}>{tr("Cancel")}</button>
           <span style={{ fontSize:11, color:"var(--text-muted)" }}>
-            Enter adds and stays open · Esc closes
+            {tr("Enter adds and stays open · Esc closes")}
           </span>
         </div>
       </div>
@@ -1234,7 +1235,7 @@ function SavedViewsControl({ savedViews, activeViewId, currentFilters, onApply, 
       await onSave(n);
       setName(""); setSaving(false);
     } catch (e) {
-      setError(e.message || "Could not save view");
+      setError(e.message || tr("Could not save view"));
     } finally {
       setBusy(false);
     }
@@ -1251,7 +1252,7 @@ function SavedViewsControl({ savedViews, activeViewId, currentFilters, onApply, 
             if (v) onApply(v);
           }}
         >
-          <option value="">My Views…</option>
+          <option value="">{tr("My Views…")}</option>
           {savedViews.map(v => (
             <option key={v.id} value={String(v.id)}>{v.name}</option>
           ))}
@@ -1260,7 +1261,7 @@ function SavedViewsControl({ savedViews, activeViewId, currentFilters, onApply, 
 
       {activeViewId && (
         <button onClick={()=>onDelete(activeViewId)}
-          title="Delete this saved view"
+          title={tr("Delete this saved view")}
           style={{ background:"none", border:"none", color:"var(--text-muted)", cursor:"pointer", fontSize:12 }}>
           ✕
         </button>
@@ -1268,27 +1269,27 @@ function SavedViewsControl({ savedViews, activeViewId, currentFilters, onApply, 
 
       {!saving ? (
         <button onClick={()=>setSaving(true)} disabled={!hasAnyFilter}
-          title={hasAnyFilter ? "Save current filters as a view" : "Set some filters first"}
+          title={hasAnyFilter ? tr("Save current filters as a view") : tr("Set some filters first")}
           className="btn btn-ghost btn-sm" style={{ fontSize:12 }}>
-          ⭐ Save view
+          {tr("⭐ Save view")}
         </button>
       ) : (
         <div style={{
-          position:"absolute", top:"calc(100% + 6px)", left:0, zIndex:50,
+          position:"absolute", top:"calc(100% + 6px)", insetInlineStart:0, zIndex:50,
           background:"var(--bg-surface)", border:"1px solid var(--border-soft)",
           borderRadius:8, boxShadow:"0 8px 24px rgba(0,0,0,0.3)", padding:10,
           display:"flex", flexDirection:"column", gap:6, width:220,
         }}>
-          <input className="input" placeholder="View name…" autoFocus
+          <input className="input" placeholder={tr("View name…")} autoFocus
             value={name} onChange={e=>setName(e.target.value)}
             onKeyDown={e => { if (e.key==="Enter") submit(); if (e.key==="Escape") setSaving(false); }}
             style={{ fontSize:13 }} />
           {error && <div style={{ fontSize:11, color:"var(--red)" }}>{error}</div>}
           <div style={{ display:"flex", gap:6 }}>
             <button className="btn btn-primary btn-sm" onClick={submit} disabled={busy || !name.trim()}
-              style={{ fontSize:12, flex:1 }}>{busy?"Saving…":"Save"}</button>
+              style={{ fontSize:12, flex:1 }}>{busy?tr("Saving…"):tr("Save")}</button>
             <button className="btn btn-ghost btn-sm" onClick={()=>{setSaving(false);setName("");setError("");}}
-              style={{ fontSize:12 }}>Cancel</button>
+              style={{ fontSize:12 }}>{tr("Cancel")}</button>
           </div>
         </div>
       )}
