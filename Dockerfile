@@ -19,7 +19,7 @@ WORKDIR /build/frontend
 # Manifests first: this layer (and the slow npm install) is reused until
 # package.json / package-lock.json change. The "*" makes the lock file optional.
 COPY frontend/package.json frontend/package-lock.json* ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+RUN if [ -f package-lock.json ]; then npm ci --legacy-peer-deps; else npm install --legacy-peer-deps; fi
 
 COPY frontend/ ./
 # Same command deploy.sh uses. --outDir overrides the relative path in
