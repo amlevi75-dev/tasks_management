@@ -21,9 +21,14 @@ export default function Layout({ children, navigate, currentPage, currentParams 
 
   useEffect(() => { applyTheme(theme); }, [theme]);
 
+  const loadProjects = () => apiFetch("/projects").then(setProjects).catch(() => {});
+
   useEffect(() => {
-    apiFetch("/projects").then(setProjects).catch(() => {});
+    loadProjects();
     apiFetch("/users/notifications").then(setNotifications).catch(() => {});
+    // apiFetch fires this after any project create / rename / archive / delete / member change
+    window.addEventListener("kairos:projects-changed", loadProjects);
+    return () => window.removeEventListener("kairos:projects-changed", loadProjects);
   }, []);
 
   const unread  = notifications.filter(n => !n.read).length;

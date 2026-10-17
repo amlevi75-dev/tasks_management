@@ -126,7 +126,15 @@ export function apiFetch(path, options = {}) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || "Request failed");
     }
-    return res.json();
+    const data = await res.json();
+    // Tell the sidebar when a project was created / renamed / archived / deleted
+    // or its members changed, so it reloads without a manual page refresh.
+    const method = (options.method || "GET").toUpperCase();
+    if (method !== "GET" &&
+        /^\/projects(\/\d+)?(\/(archive|unarchive|members)(\/\d+)?)?$/.test(String(path).split("?")[0])) {
+      window.dispatchEvent(new Event("kairos:projects-changed"));
+    }
+    return data;
   });
 }
 
