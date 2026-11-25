@@ -22,7 +22,7 @@ import { tr, trVal } from "../i18n";
  */
 export default function RichTextEditor({ value, onChange, placeholder, readOnly = false }) {
   const ref = useRef(null);
-  const lastValue = useRef(value);
+  const lastValue = useRef(null);
 
   // Only overwrite the DOM when the value changed from *outside* (e.g. task
   // switched) — otherwise every keystroke's onChange would immediately
